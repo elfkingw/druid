@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,16 +61,14 @@ public final class JdbcStatManager implements JdbcStatManagerMBean {
     }
 
     public JdbcStatContext createStatContext() {
-        JdbcStatContext context = new JdbcStatContext();
-
-        return context;
+        return new JdbcStatContext();
     }
 
     public long generateSqlId() {
         return sqlIdSeed.incrementAndGet();
     }
 
-    public static final JdbcStatManager getInstance() {
+    public static JdbcStatManager getInstance() {
         return instance;
     }
 
@@ -82,7 +80,7 @@ public final class JdbcStatManager implements JdbcStatManagerMBean {
         return resultSetStat;
     }
 
-    public JdbcConnectionStat getConnectionstat() {
+    public JdbcConnectionStat getConnectionStat() {
         return connectionStat;
     }
 
@@ -258,9 +256,8 @@ public final class JdbcStatManager implements JdbcStatManagerMBean {
         //
         };
 
-        String[] indexDescriptions = indexNames;
         COMPOSITE_TYPE = new CompositeType("DataSourceStatistic", "DataSource Statistic", indexNames,
-                                           indexDescriptions, indexTypes);
+                indexNames, indexTypes);
 
         return COMPOSITE_TYPE;
     }

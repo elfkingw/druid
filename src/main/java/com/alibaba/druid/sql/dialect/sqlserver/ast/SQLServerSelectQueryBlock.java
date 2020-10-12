@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,42 @@
  */
 package com.alibaba.druid.sql.dialect.sqlserver.ast;
 
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public class SQLServerSelectQueryBlock extends SQLSelectQueryBlock {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+    private SQLServerTop top;
 
-    private SQLServerTop               top;
+    public SQLServerSelectQueryBlock() {
+        dbType = DbType.sqlserver;
+    }
 
     public SQLServerTop getTop() {
         return top;
     }
 
     public void setTop(SQLServerTop top) {
+        if (top != null) {
+            top.setParent(this);
+        }
         this.top = top;
+    }
+
+    public void setTop(int rowCount) {
+        setTop(new SQLServerTop(new SQLIntegerExpr(rowCount)));
     }
 
     @Override
     protected void accept0(SQLASTVisitor visitor) {
-        accept0((SQLServerASTVisitor) visitor);
+        if (visitor instanceof SQLServerASTVisitor) {
+            accept0((SQLServerASTVisitor) visitor);
+        } else {
+            super.accept0(visitor);
+        }
     }
 
     protected void accept0(SQLServerASTVisitor visitor) {
@@ -50,5 +62,13 @@ public class SQLServerSelectQueryBlock extends SQLSelectQueryBlock {
             acceptChild(visitor, this.groupBy);
         }
         visitor.endVisit(this);
+    }
+
+    public void limit(int rowCount, int offset) {
+        if (offset <= 0) {
+            setTop(rowCount);
+        } else {
+            throw new UnsupportedOperationException("not support offset");
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,8 +59,8 @@ public class SqlMapClientWrapper extends SqlMapExecutorWrapper implements SqlMap
         client.endTransaction();
     }
 
-    public void setUserConnection(Connection connnection) throws SQLException {
-        client.setUserConnection(connnection);
+    public void setUserConnection(Connection connection) throws SQLException {
+        client.setUserConnection(connection);
     }
 
     public Connection getUserConnection() throws SQLException {

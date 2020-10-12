@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.ast.clause;
 
+import com.alibaba.druid.sql.ast.*;
+import com.alibaba.druid.sql.ast.statement.SQLSelect;
+import com.alibaba.druid.sql.dialect.oracle.ast.OracleSQLObjectImpl;
+import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleExpr;
+import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
+import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLOrderBy;
-import com.alibaba.druid.sql.ast.statement.SQLSelect;
-import com.alibaba.druid.sql.dialect.oracle.ast.OracleSQLObjectImpl;
-import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
-
 public class ModelClause extends OracleSQLObjectImpl {
-
-    private static final long                serialVersionUID      = 1L;
 
     private final List<CellReferenceOption>  cellReferenceOptions  = new ArrayList<CellReferenceOption>();
     private ReturnRowsClause                 returnRowsClause;
@@ -40,6 +39,7 @@ public class ModelClause extends OracleSQLObjectImpl {
             acceptChild(visitor, referenceModelClauses);
             acceptChild(visitor, mainModel);
         }
+        visitor.endVisit(this);
     }
 
     public MainModelClause getMainModel() {
@@ -90,8 +90,7 @@ public class ModelClause extends OracleSQLObjectImpl {
 
     public static class ReturnRowsClause extends OracleSQLObjectImpl {
 
-        private static final long serialVersionUID = 1L;
-        private boolean           all              = false;
+        private boolean all = false;
 
         public boolean isAll() {
             return all;
@@ -104,12 +103,12 @@ public class ModelClause extends OracleSQLObjectImpl {
         @Override
         public void accept0(OracleASTVisitor visitor) {
             visitor.visit(this);
+            visitor.endVisit(this);
         }
     }
 
     public static class ReferenceModelClause extends OracleSQLObjectImpl {
 
-        private static final long               serialVersionUID     = 1L;
         private SQLExpr                         name;
         private SQLSelect                       subQuery;
         private final List<CellReferenceOption> cellReferenceOptions = new ArrayList<CellReferenceOption>();
@@ -142,7 +141,6 @@ public class ModelClause extends OracleSQLObjectImpl {
 
     public static class ModelColumnClause extends OracleSQLObjectImpl {
 
-        private static final long       serialVersionUID   = 1L;
         private QueryPartitionClause    queryPartitionClause;
         private String                  alias;
         private final List<ModelColumn> dimensionByColumns = new ArrayList<ModelColumn>();
@@ -179,16 +177,15 @@ public class ModelClause extends OracleSQLObjectImpl {
                 acceptChild(visitor, dimensionByColumns);
                 acceptChild(visitor, measuresColumns);
             }
+            visitor.endVisit(this);
         }
 
     }
 
     public static class ModelColumn extends OracleSQLObjectImpl {
 
-        private static final long serialVersionUID = 1L;
-
-        private SQLExpr           expr;
-        private String            alias;
+        private SQLExpr expr;
+        private String  alias;
 
         public SQLExpr getExpr() {
             return expr;
@@ -211,14 +208,14 @@ public class ModelClause extends OracleSQLObjectImpl {
             if (visitor.visit(this)) {
                 acceptChild(visitor, expr);
             }
+            visitor.endVisit(this);
         }
 
     }
 
     public static class QueryPartitionClause extends OracleSQLObjectImpl {
 
-        private static final long serialVersionUID = 1L;
-        private List<SQLExpr>     exprList         = new ArrayList<SQLExpr>();
+        private List<SQLExpr> exprList = new ArrayList<SQLExpr>();
 
         public List<SQLExpr> getExprList() {
             return exprList;
@@ -239,7 +236,6 @@ public class ModelClause extends OracleSQLObjectImpl {
 
     public static class MainModelClause extends OracleSQLObjectImpl {
 
-        private static final long               serialVersionUID     = 1L;
         private SQLExpr                         mainModelName;
         private ModelColumnClause               modelColumnClause;
 
@@ -281,13 +277,13 @@ public class ModelClause extends OracleSQLObjectImpl {
                 acceptChild(visitor, modelColumnClause);
                 acceptChild(visitor, modelRulesClause);
             }
+            visitor.endVisit(this);
         }
 
     }
 
     public static class ModelRulesClause extends OracleSQLObjectImpl {
 
-        private static final long              serialVersionUID    = 1L;
         private final List<ModelRuleOption>    options             = new ArrayList<ModelRuleOption>();
         private SQLExpr                        iterate;
         private SQLExpr                        until;
@@ -324,6 +320,7 @@ public class ModelClause extends OracleSQLObjectImpl {
                 acceptChild(visitor, until);
                 acceptChild(visitor, cellAssignmentItems);
             }
+            visitor.endVisit(this);
         }
 
     }
@@ -346,11 +343,10 @@ public class ModelClause extends OracleSQLObjectImpl {
 
     public static class CellAssignmentItem extends OracleSQLObjectImpl {
 
-        private static final long serialVersionUID = 1L;
-        private ModelRuleOption   option;
-        private CellAssignment    cellAssignment;
-        private SQLOrderBy        orderBy;
-        private SQLExpr           expr;
+        private ModelRuleOption option;
+        private CellAssignment  cellAssignment;
+        private SQLOrderBy      orderBy;
+        private SQLExpr         expr;
 
         public ModelRuleOption getOption() {
             return option;
@@ -391,15 +387,15 @@ public class ModelClause extends OracleSQLObjectImpl {
                 acceptChild(visitor, orderBy);
                 acceptChild(visitor, expr);
             }
+            visitor.endVisit(this);
         }
 
     }
 
-    public static class CellAssignment extends OracleSQLObjectImpl {
+    public static class CellAssignment extends SQLExprImpl implements OracleExpr, SQLReplaceable {
 
-        private static final long   serialVersionUID = 1L;
         private SQLExpr             measureColumn;
-        private final List<SQLExpr> conditions       = new ArrayList<SQLExpr>();
+        private final List<SQLExpr> conditions = new ArrayList<SQLExpr>();
 
         public List<SQLExpr> getConditions() {
             return conditions;
@@ -409,8 +405,29 @@ public class ModelClause extends OracleSQLObjectImpl {
             return measureColumn;
         }
 
-        public void setMeasureColumn(SQLExpr measureColumn) {
-            this.measureColumn = measureColumn;
+        public void setMeasureColumn(SQLExpr e) {
+            if (e != null) {
+                e.setParent(this);
+            }
+            this.measureColumn = e;
+        }
+
+        @Override
+        public boolean replace(SQLExpr expr, SQLExpr target) {
+            if (this.measureColumn == expr) {
+                setMeasureColumn(target);
+                return true;
+            }
+
+            for (int i = 0; i < conditions.size(); i++) {
+                if (conditions.get(i) == expr) {
+                    target.setParent(this);
+                    conditions.set(i, target);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         @Override
@@ -419,7 +436,52 @@ public class ModelClause extends OracleSQLObjectImpl {
                 acceptChild(visitor, measureColumn);
                 acceptChild(visitor, conditions);
             }
+            visitor.endVisit(this);
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CellAssignment that = (CellAssignment) o;
+
+            if (measureColumn != null ? !measureColumn.equals(that.measureColumn) : that.measureColumn != null)
+                return false;
+            return conditions.equals(that.conditions);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = measureColumn != null ? measureColumn.hashCode() : 0;
+            result = 31 * result + conditions.hashCode();
+            return result;
+        }
+
+        @Override
+        protected void accept0(SQLASTVisitor visitor) {
+            accept0((OracleASTVisitor) visitor);
+        }
+
+        @Override
+        public SQLExpr clone() {
+            CellAssignment x = new CellAssignment();
+            if (measureColumn != null) {
+                x.setMeasureColumn(measureColumn.clone());
+            }
+            return null;
+        }
+
+        @Override
+        public List<SQLObject> getChildren() {
+            List children = new ArrayList();
+            children.add(measureColumn);
+            children.addAll(conditions);
+            return children;
+        }
+    }
+
+    public ModelClause clone() {
+        throw new UnsupportedOperationException();
     }
 }

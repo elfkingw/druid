@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,15 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.ast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.druid.sql.ast.SQLDataTypeImpl;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class OracleDataTypeIntervalDay extends SQLDataTypeImpl implements OracleSQLObject {
+import java.util.ArrayList;
+import java.util.List;
 
-    private static final long     serialVersionUID  = 1L;
+public class OracleDataTypeIntervalDay extends SQLDataTypeImpl implements OracleSQLObject {
 
     private boolean               toSecond          = false;
 
@@ -58,6 +56,19 @@ public class OracleDataTypeIntervalDay extends SQLDataTypeImpl implements Oracle
 
     public List<SQLExpr> getFractionalSeconds() {
         return fractionalSeconds;
+    }
+
+    public OracleDataTypeIntervalDay clone() {
+        OracleDataTypeIntervalDay x = new OracleDataTypeIntervalDay();
+
+        super.cloneTo(x);
+
+        for (SQLExpr arg : fractionalSeconds) {
+            arg.setParent(x);
+            x.fractionalSeconds.add(arg);
+        }
+
+        return x;
     }
 
 }

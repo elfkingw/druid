@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import com.alibaba.druid.support.logging.Log;
 import com.alibaba.druid.support.logging.LogFactory;
 
 /**
- * @author sandzhang<sandzhangtoo@gmail.com>
+ * @author sandzhang[sandzhangtoo@gmail.com]
  */
 public class HttpClientUtils {
 
@@ -53,7 +53,7 @@ public class HttpClientUtils {
                 responseBuilder = new StringBuilder();
                 String line = null;
                 while ((line = reader.readLine()) != null) {
-                    responseBuilder.append(line + "\n");
+                    responseBuilder.append(line).append("\n");
                 }
                 LOG.debug(responseBuilder.toString());
             }

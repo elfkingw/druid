@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,39 +15,37 @@
  */
 package com.alibaba.druid.sql.dialect.sqlserver.ast.stmt;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerObject;
+import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerOutput;
+import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public class SQLServerInsertStatement extends SQLInsertStatement implements SQLServerObject {
 
-    private static final long  serialVersionUID = 2652393792927901563L;
+    private boolean            defaultValues;
 
-    private List<ValuesClause> valuesList       = new ArrayList<ValuesClause>();
+    private SQLServerTop       top;
 
-    public ValuesClause getValues() {
-        if (valuesList.size() == 0) {
-            return null;
+    private SQLServerOutput    output;
+
+    public SQLServerInsertStatement() {
+        dbType = DbType.sqlserver;
+    }
+
+    public void cloneTo(SQLServerInsertStatement x) {
+        super.cloneTo(x);
+        x.defaultValues = defaultValues;
+        if (top != null) {
+            x.setTop(top.clone());
         }
-        return valuesList.get(0);
-    }
-
-    public void setValues(ValuesClause values) {
-        if (valuesList.size() == 0) {
-            valuesList.add(values);
-        } else {
-            valuesList.set(0, values);
+        if (output != null) {
+            x.setOutput(output.clone());
         }
     }
 
-    public List<ValuesClause> getValuesList() {
-        return valuesList;
-    }
-    
     @Override
     protected void accept0(SQLASTVisitor visitor) {
         this.accept0((SQLServerASTVisitor) visitor);
@@ -56,12 +54,44 @@ public class SQLServerInsertStatement extends SQLInsertStatement implements SQLS
     @Override
     public void accept0(SQLServerASTVisitor visitor) {
         if (visitor.visit(this)) {
+            this.acceptChild(visitor, getTop());
             this.acceptChild(visitor, getTableSource());
             this.acceptChild(visitor, getColumns());
+            this.acceptChild(visitor, getOutput());
             this.acceptChild(visitor, getValuesList());
             this.acceptChild(visitor, getQuery());
         }
 
         visitor.endVisit(this);
+    }
+
+    public boolean isDefaultValues() {
+        return defaultValues;
+    }
+
+    public void setDefaultValues(boolean defaultValues) {
+        this.defaultValues = defaultValues;
+    }
+
+    public SQLServerOutput getOutput() {
+        return output;
+    }
+
+    public void setOutput(SQLServerOutput output) {
+        this.output = output;
+    }
+
+    public SQLServerTop getTop() {
+        return top;
+    }
+
+    public void setTop(SQLServerTop top) {
+        this.top = top;
+    }
+
+    public SQLServerInsertStatement clone() {
+        SQLServerInsertStatement x = new SQLServerInsertStatement();
+        cloneTo(x);
+        return x;
     }
 }

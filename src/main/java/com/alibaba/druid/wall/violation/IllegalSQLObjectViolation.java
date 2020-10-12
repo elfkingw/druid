@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ public class IllegalSQLObjectViolation implements Violation {
     private final String sqlPart;
     private final int errorCode;
 
-    public IllegalSQLObjectViolation(int errorCode, String message, String condition){
+    public IllegalSQLObjectViolation(int errorCode, String message, String sqlPart){
         this.errorCode = errorCode;
         this.message = message;
-        this.sqlPart = condition;
+        this.sqlPart = sqlPart;
     }
 
     public String getSqlPart() {

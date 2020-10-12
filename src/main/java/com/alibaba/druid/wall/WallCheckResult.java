@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.Map;
 import com.alibaba.druid.sql.ast.SQLStatement;
 
 public class WallCheckResult {
-
     private final List<SQLStatement>               statementList;
     private final Map<String, WallSqlTableStat>    tableStats;
 
@@ -33,6 +32,10 @@ public class WallCheckResult {
     private final boolean                          syntaxError;
 
     private final WallSqlStat                      sqlStat;
+
+    private String                                 sql;
+
+    private List<WallUpdateCheckItem>              updateCheckItems;
 
     public WallCheckResult(){
         this(null);
@@ -70,6 +73,14 @@ public class WallCheckResult {
         this.syntaxError = syntaxError;
     }
 
+    public String getSql() {
+        return sql;
+    }
+
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
+
     public List<Violation> getViolations() {
         return violations;
     }
@@ -90,8 +101,15 @@ public class WallCheckResult {
         return syntaxError;
     }
 
-    
     public WallSqlStat getSqlStat() {
         return sqlStat;
+    }
+
+    public List<WallUpdateCheckItem> getUpdateCheckItems() {
+        return updateCheckItems;
+    }
+
+    public void setUpdateCheckItems(List<WallUpdateCheckItem> updateCheckItems) {
+        this.updateCheckItems = updateCheckItems;
     }
 }

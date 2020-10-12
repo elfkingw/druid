@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package com.alibaba.druid.support.ibatis;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -50,8 +49,7 @@ public class SpringIbatisBeanTypeAutoProxyCreator extends AbstractAutoProxyCreat
      */
     @SuppressWarnings("rawtypes")
     protected Object[] getAdvicesAndAdvisorsForBean(Class beanClass, String beanName, TargetSource targetSource) {
-        for (Iterator<String> it = this.beanNames.iterator(); it.hasNext();) {
-            String mappedName = (String) it.next();
+        for (String mappedName : this.beanNames) {
             if (FactoryBean.class.isAssignableFrom(beanClass)) {
                 if (!mappedName.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
                     continue;

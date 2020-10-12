@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,36 +16,58 @@
 package com.alibaba.druid.sql.dialect.mysql.ast.statement;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLObject;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.SQLStatementImpl;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
+import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class MySqlKillStatement extends MySqlStatementImpl {
-	private static final long serialVersionUID = 1L;
-	private Type type;
-	private SQLExpr threadId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-	public static enum Type {
-		CONNECTION, QUERY
-	}
+public class MySqlKillStatement extends SQLStatementImpl {
 
-	public Type getType() {
-		return type;
-	}
+    private Type          type;
+    private List<SQLExpr> threadIds = new ArrayList<SQLExpr>();
 
-	public void setType(Type type) {
-		this.type = type;
-	}
+    public static enum Type {
+                             CONNECTION, QUERY
+    }
 
-	public SQLExpr getThreadId() {
-		return threadId;
-	}
+    public Type getType() {
+        return type;
+    }
 
-	public void setThreadId(SQLExpr threadId) {
-		this.threadId = threadId;
-	}
+    public void setType(Type type) {
+        this.type = type;
+    }
 
-	public void accept0(MySqlASTVisitor visitor) {
-		if (visitor.visit(this)) {
-			acceptChild(visitor, threadId);
-		}
-	}
+    public SQLExpr getThreadId() {
+        return threadIds.get(0);
+    }
+
+    public void setThreadId(SQLExpr threadId) {
+        if (this.threadIds.size() == 0) {
+            this.threadIds.add(threadId);
+            return;
+        }
+        this.threadIds.set(0, threadId);
+    }
+    
+    public List<SQLExpr> getThreadIds() {
+        return threadIds;
+    }
+
+    protected void accept0(SQLASTVisitor visitor) {
+        if (visitor.visit(this)) {
+            acceptChild(visitor, threadIds);
+        }
+        visitor.endVisit(this);
+    }
+
+    @Override
+    public List<SQLObject> getChildren() {
+        return Collections.<SQLObject>emptyList();
+    }
 }

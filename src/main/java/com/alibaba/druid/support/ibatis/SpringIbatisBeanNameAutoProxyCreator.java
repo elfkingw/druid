@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,16 @@ import com.ibatis.sqlmap.engine.impl.ExtendedSqlMapClient;
 @SuppressWarnings({ "serial", "deprecation" })
 public class SpringIbatisBeanNameAutoProxyCreator extends BeanNameAutoProxyCreator implements SpringIbatisBeanNameAutoProxyCreatorMBean {
 
-    private final static Log   LOG            = LogFactory.getLog(SpringIbatisBeanNameAutoProxyCreator.class);
+    private final static Log LOG            = LogFactory.getLog(SpringIbatisBeanNameAutoProxyCreator.class);
 
-    private final List<String> proxyBeanNames = new ArrayList<String>();
+    private List<String>     proxyBeanNames = new ArrayList<String>();
 
     public List<String> getProxyBeanNames() {
         return proxyBeanNames;
+    }
+
+    public void setProxyBeanNames(List<String> proxyBeanNames) {
+        this.proxyBeanNames = proxyBeanNames;
     }
 
     @SuppressWarnings("rawtypes")

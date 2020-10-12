@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,43 +15,119 @@
  */
 package com.alibaba.druid.sql.ast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-@SuppressWarnings("serial")
-public class SQLOrderBy extends SQLObjectImpl {
+import java.util.ArrayList;
+import java.util.List;
+
+public final class SQLOrderBy extends SQLObjectImpl implements SQLReplaceable {
 
     protected final List<SQLSelectOrderByItem> items = new ArrayList<SQLSelectOrderByItem>();
+    
+    // for postgres
+    private boolean                            sibings;
 
     public SQLOrderBy(){
 
     }
 
+    public SQLOrderBy(SQLExpr expr){
+        SQLSelectOrderByItem item = new SQLSelectOrderByItem(expr);
+        addItem(item);
+    }
+
+    public SQLOrderBy(SQLExpr expr, SQLOrderingSpecification type){
+        SQLSelectOrderByItem item = new SQLSelectOrderByItem(expr, type);
+        addItem(item);
+    }
+
+    public void addItem(SQLSelectOrderByItem item) {
+        if (item != null) {
+            item.setParent(this);
+        }
+        this.items.add(item);
+    }
+
+    public void addItem(SQLExpr item) {
+        addItem(new SQLSelectOrderByItem(item));
+    }
+
     public List<SQLSelectOrderByItem> getItems() {
         return this.items;
     }
-
-    protected void accept0(SQLASTVisitor visitor) {
-        if (visitor.visit(this)) {
-            acceptChild(visitor, this.items);
-        }
-
-        visitor.endVisit(this);
+    
+    public boolean isSibings() {
+        return this.sibings;
     }
 
-    public void output(StringBuffer buf) {
-        buf.append("ORDER ");
-        buf.append("BY ");
+    public void setSibings(boolean sibings) {
+        this.sibings = sibings;
+    }
 
-        int i = 0;
-        for (int size = this.items.size(); i < size; ++i) {
-            if (i != 0) {
-                buf.append(", ");
+    protected void accept0(SQLASTVisitor v) {
+        if (v.visit(this)) {
+            for (int i = 0; i < this.items.size(); i++) {
+                final SQLSelectOrderByItem item = this.items.get(i);
+                item.accept(v);
             }
-            this.items.get(i).output(buf);
         }
+
+        v.endVisit(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SQLOrderBy order = (SQLOrderBy) o;
+
+        if (sibings != order.sibings) return false;
+        return items.equals(order.items);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = items.hashCode();
+        result = 31 * result + (sibings ? 1 : 0);
+        return result;
+    }
+
+    public void addItem(SQLExpr expr, SQLOrderingSpecification type) {
+        SQLSelectOrderByItem item = createItem();
+        item.setExpr(expr);
+        item.setType(type);
+        addItem(item);
+    }
+
+    @Override
+    public boolean replace(SQLExpr expr, SQLExpr target) {
+
+        for (SQLSelectOrderByItem item : items) {
+            if(item.replace(expr, target)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected SQLSelectOrderByItem createItem() {
+        return new SQLSelectOrderByItem();
+    }
+
+    public SQLOrderBy clone() {
+        SQLOrderBy x = new SQLOrderBy();
+
+        for (SQLSelectOrderByItem item : items) {
+            SQLSelectOrderByItem item1 = item.clone();
+            item1.setParent(x);
+            x.items.add(item1);
+        }
+
+        x.sibings = sibings;
+
+        return x;
     }
 }

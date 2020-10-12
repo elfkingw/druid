@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,19 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.EnumSet;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 
-import oracle.jdbc.OracleOCIFailover;
-import oracle.jdbc.OracleSavepoint;
+import oracle.jdbc.*;
+import oracle.jdbc.aq.AQDequeueOptions;
+import oracle.jdbc.aq.AQEnqueueOptions;
+import oracle.jdbc.aq.AQMessage;
+import oracle.jdbc.aq.AQNotificationRegistration;
+import oracle.jdbc.dcn.DatabaseChangeRegistration;
 import oracle.jdbc.internal.OracleConnection;
 import oracle.jdbc.pool.OracleConnectionCacheCallback;
 import oracle.sql.ARRAY;
@@ -94,6 +101,111 @@ public class OracleMockConnection extends MockConnection implements oracle.jdbc.
     public void clearAllApplicationContext(String arg0) throws SQLException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void addLogicalTransactionIdEventListener(LogicalTransactionIdEventListener logicalTransactionIdEventListener) throws SQLException {
+
+    }
+
+    @Override
+    public void addLogicalTransactionIdEventListener(LogicalTransactionIdEventListener logicalTransactionIdEventListener, Executor executor) throws SQLException {
+
+    }
+
+    @Override
+    public void removeLogicalTransactionIdEventListener(LogicalTransactionIdEventListener logicalTransactionIdEventListener) throws SQLException {
+
+    }
+
+    @Override
+    public LogicalTransactionId getLogicalTransactionId() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public boolean isDRCPEnabled() throws SQLException {
+        return false;
+    }
+
+    @Override
+    public boolean isDRCPMultitagEnabled() throws SQLException {
+        return false;
+    }
+
+    @Override
+    public String getDRCPReturnTag() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public String getDRCPPLSQLCallbackName() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public boolean attachServerConnection() throws SQLException {
+        return false;
+    }
+
+    @Override
+    public void detachServerConnection(String s) throws SQLException {
+
+    }
+
+    @Override
+    public boolean needToPurgeStatementCache() throws SQLException {
+        return false;
+    }
+
+    @Override
+    public DRCPState getDRCPState() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public void beginRequest() throws SQLException {
+
+    }
+
+    @Override
+    public void endRequest() throws SQLException {
+
+    }
+
+    @Override
+    public boolean setShardingKeyIfValid(OracleShardingKey oracleShardingKey, OracleShardingKey oracleShardingKey1, int i) throws SQLException {
+        return false;
+    }
+
+    @Override
+    public void setShardingKey(OracleShardingKey oracleShardingKey, OracleShardingKey oracleShardingKey1) throws SQLException {
+
+    }
+
+    @Override
+    public boolean setShardingKeyIfValid(OracleShardingKey oracleShardingKey, int i) throws SQLException {
+        return false;
+    }
+
+    @Override
+    public void setShardingKey(OracleShardingKey oracleShardingKey) throws SQLException {
+
+    }
+
+    @Override
+    public boolean isValid(ConnectionValidation connectionValidation, int i) throws SQLException {
+        return false;
+    }
+
+    @Override
+    public String getEncryptionProviderName() throws SQLException {
+        return null;
+    }
+
+    @Override
+    public String getChecksumProviderName() throws SQLException {
+        return null;
     }
 
     public void close(Properties arg0) throws SQLException {
@@ -241,6 +353,11 @@ public class OracleMockConnection extends MockConnection implements oracle.jdbc.
         return null;
     }
 
+    @Override
+    public TIMESTAMP createTIMESTAMP(Timestamp timestamp, Calendar calendar) throws SQLException {
+        return null;
+    }
+
     public TIMESTAMP createTIMESTAMP(String arg0) throws SQLException {
         // TODO Auto-generated method stub
         return null;
@@ -308,6 +425,11 @@ public class OracleMockConnection extends MockConnection implements oracle.jdbc.
 
     public TIMESTAMPTZ createTIMESTAMPTZ(Timestamp arg0, Calendar arg1) throws SQLException {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public TIMESTAMPTZ createTIMESTAMPTZ(Timestamp timestamp, ZoneId zoneId) throws SQLException {
         return null;
     }
 
@@ -733,9 +855,80 @@ public class OracleMockConnection extends MockConnection implements oracle.jdbc.
         return this.getDriver().createMockPreparedStatement(this, sql);
     }
 
-    @Override
     public void shutdown(int arg0) throws SQLException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void commit(EnumSet<CommitOption> arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public AQMessage dequeue(String arg0, AQDequeueOptions arg1, byte[] arg2) throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public AQMessage dequeue(String arg0, AQDequeueOptions arg1, String arg2) throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void enqueue(String arg0, AQEnqueueOptions arg1, AQMessage arg2) throws SQLException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public DatabaseChangeRegistration getDatabaseChangeRegistration(int arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public AQNotificationRegistration[] registerAQNotification(String[] arg0, Properties[] arg1, Properties arg2)
+                                                                                                                 throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DatabaseChangeRegistration registerDatabaseChangeNotification(Properties arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void shutdown(DatabaseShutdownMode arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void startup(DatabaseStartupMode arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void startup(DatabaseStartupMode databaseStartupMode, String s) throws SQLException {
+
+    }
+
+    @Override
+    public void unregisterAQNotification(AQNotificationRegistration arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void unregisterDatabaseChangeNotification(DatabaseChangeRegistration arg0) throws SQLException {
+        // TODO Auto-generated method stub
+        
     }
 }

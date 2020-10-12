@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public class OracleDataTypeIntervalYear extends SQLDataTypeImpl implements OracleSQLObject {
 
-    private static final long serialVersionUID = 1L;
-
     public OracleDataTypeIntervalYear(){
         this.setName("INTERVAL YEAR");
     }
@@ -40,4 +38,11 @@ public class OracleDataTypeIntervalYear extends SQLDataTypeImpl implements Oracl
         visitor.endVisit(this);
     }
 
+    public OracleDataTypeIntervalYear clone() {
+        OracleDataTypeIntervalYear x = new OracleDataTypeIntervalYear();
+
+        super.cloneTo(x);
+
+        return x;
+    }
 }

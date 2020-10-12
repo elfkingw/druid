@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,63 +15,7 @@
  */
 package com.alibaba.druid.sql.dialect.sqlserver.visitor;
 
-import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
-import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
-import com.alibaba.druid.sql.dialect.sqlserver.ast.expr.SQLServerObjectReferenceExpr;
-import com.alibaba.druid.sql.dialect.sqlserver.ast.stmt.SQLServerInsertStatement;
-import com.alibaba.druid.sql.dialect.sqlserver.ast.stmt.SQLServerUpdateStatement;
 import com.alibaba.druid.sql.visitor.SQLASTVisitorAdapter;
 
 public class SQLServerASTVisitorAdapter extends SQLASTVisitorAdapter implements SQLServerASTVisitor {
-
-    @Override
-    public boolean visit(SQLServerSelectQueryBlock x) {
-        return true;
-    }
-
-    @Override
-    public void endVisit(SQLServerSelectQueryBlock x) {
-
-    }
-
-    @Override
-    public boolean visit(SQLServerTop x) {
-        return true;
-    }
-
-    @Override
-    public void endVisit(SQLServerTop x) {
-
-    }
-    
-    @Override
-    public boolean visit(SQLServerObjectReferenceExpr x) {
-        return true;
-    }
-    
-    @Override
-    public void endVisit(SQLServerObjectReferenceExpr x) {
-        
-    }
-
-    @Override
-    public boolean visit(SQLServerInsertStatement x) {
-        return true;
-    }
-
-    @Override
-    public void endVisit(SQLServerInsertStatement x) {
-        
-    }
-
-    @Override
-    public boolean visit(SQLServerUpdateStatement x) {
-        return true;
-    }
-
-    @Override
-    public void endVisit(SQLServerUpdateStatement x) {
-        
-    }
-
 }

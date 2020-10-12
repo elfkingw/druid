@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,40 +29,44 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 
 import com.alibaba.druid.filter.FilterChainImpl;
 import com.alibaba.druid.stat.JdbcSqlStat;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao [szujobs@hotmail.com]
  */
 public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetProxy {
 
-    private final ResultSet      resultSet;
-    private final StatementProxy statement;
-    private final String         sql;
+    private final ResultSet       resultSet;
+    private final StatementProxy  statement;
+    private final String          sql;
 
-    protected int                cursorIndex          = 0;
-    protected int                fetchRowCount        = 0;
-    protected long               constructNano;
-    protected final JdbcSqlStat  sqlStat;
-    private int                  closeCount           = 0;
+    protected int                 cursorIndex          = 0;
+    protected int                 fetchRowCount        = 0;
+    protected long                constructNano;
+    protected final JdbcSqlStat   sqlStat;
+    private int                   closeCount           = 0;
 
-    private long                 readStringLength     = 0;
-    private long                 readBytesLength      = 0;
+    private long                  readStringLength     = 0;
+    private long                  readBytesLength      = 0;
 
-    private int                  openInputStreamCount = 0;
-    private int                  openReaderCount      = 0;
+    private int                   openInputStreamCount = 0;
+    private int                   openReaderCount      = 0;
 
-    private FilterChainImpl      filterChain          = null;
+    private Map<Integer, Integer> logicColumnMap       = null;
+    private Map<Integer, Integer> physicalColumnMap    = null;
+    private List<Integer>         hiddenColumns        = null;
+
+    private FilterChainImpl       filterChain          = null;
 
     public ResultSetProxyImpl(StatementProxy statement, ResultSet resultSet, long id, String sql){
         super(resultSet, id);
@@ -117,10 +121,10 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
         } else {
             this.filterChain = null;
         }
-        
+
         return chain;
     }
-    
+
     public void recycleFilterChain(FilterChainImpl chain) {
         chain.reset();
         this.filterChain = chain;
@@ -182,6 +186,7 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
         FilterChainImpl chain = createChain();
         int value = chain.resultSet_findColumn(this, columnLabel);
         recycleFilterChain(chain);
+
         return value;
     }
 
@@ -444,7 +449,7 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
     @Override
     public int getFetchSize() throws SQLException {
         FilterChainImpl chain = createChain();
-        int value =  chain.resultSet_getFetchSize(this);
+        int value = chain.resultSet_getFetchSize(this);
         recycleFilterChain(chain);
         return value;
     }
@@ -881,7 +886,7 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
                 fetchRowCount = cursorIndex;
             }
         }
-        
+
         recycleFilterChain(chain);
         return moreRows;
     }
@@ -1537,17 +1542,25 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
     public boolean wasNull() throws SQLException {
         FilterChainImpl chain = createChain();
         boolean result = chain.resultSet_wasNull(this);
-        
+
         recycleFilterChain(chain);
         return result;
     }
 
+    @Override
     public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        T value = chain.resultSet_getObject(this, columnIndex, type);
+        recycleFilterChain(chain);
+        return value;
     }
 
+    @Override
     public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        T value = chain.resultSet_getObject(this, columnLabel, type);
+        recycleFilterChain(chain);
+        return value;
     }
 
     public int getCloseCount() {
@@ -1592,6 +1605,69 @@ public class ResultSetProxyImpl extends WrapperProxyImpl implements ResultSetPro
     @Override
     public int getOpenReaderCount() {
         return openReaderCount;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (iface == ResultSetProxy.class || iface == ResultSetProxyImpl.class) {
+            return (T) this;
+        }
+
+        return super.unwrap(iface);
+    }
+
+    @Override
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        if (iface == ResultSetProxy.class || iface == ResultSetProxyImpl.class) {
+            return true;
+        }
+
+        return super.isWrapperFor(iface);
+    }
+
+    @Override
+    public int getPhysicalColumn(int logicColumn) {
+        if (logicColumnMap == null) {
+            return logicColumn;
+        }
+        return logicColumnMap.get(logicColumn);
+    }
+
+    @Override
+    public int getLogicColumn(int physicalColumn) {
+        if (physicalColumnMap == null) {
+            return physicalColumn;
+        }
+        return physicalColumnMap.get(physicalColumn);
+    }
+
+    @Override
+    public int getHiddenColumnCount() {
+        if (hiddenColumns == null) {
+            return 0;
+        }
+        return hiddenColumns.size();
+    }
+
+    @Override
+    public List<Integer> getHiddenColumns() {
+        return this.hiddenColumns;
+    }
+
+    @Override
+    public void setLogicColumnMap(Map<Integer, Integer> logicColumnMap) {
+        this.logicColumnMap = logicColumnMap;
+    }
+
+    @Override
+    public void setPhysicalColumnMap(Map<Integer, Integer> physicalColumnMap) {
+        this.physicalColumnMap = physicalColumnMap;
+    }
+
+    @Override
+    public void setHiddenColumns(List<Integer> hiddenColumns) {
+        this.hiddenColumns = hiddenColumns;
     }
 
 }

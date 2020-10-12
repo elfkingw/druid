@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,7 @@ import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public class SQLAlterTableEnableConstraint extends SQLObjectImpl implements SQLAlterTableItem {
 
-    private static final long serialVersionUID = 1L;
-
-    private SQLName           constraintName;
+    private SQLName constraintName;
 
     @Override
     protected void accept0(SQLASTVisitor visitor) {
@@ -33,15 +31,12 @@ public class SQLAlterTableEnableConstraint extends SQLObjectImpl implements SQLA
         visitor.endVisit(this);
     }
 
-    
     public SQLName getConstraintName() {
         return constraintName;
     }
 
-    
     public void setConstraintName(SQLName constraintName) {
         this.constraintName = constraintName;
     }
 
-    
 }

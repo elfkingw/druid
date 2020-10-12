@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package com.alibaba.druid.sql.visitor;
 
-import java.util.List;
-
 import com.alibaba.druid.sql.visitor.functions.Function;
+
+import java.util.List;
 
 public interface SQLEvalVisitor extends SQLASTVisitor {
 
@@ -25,11 +25,13 @@ public interface SQLEvalVisitor extends SQLASTVisitor {
     public static final String EVAL_EXPR        = "eval.expr";
     public static final Object EVAL_ERROR       = new Object();
     public static final Object EVAL_VALUE_COUNT = new Object();
-    public static final Object EVAL_VALUE_NULL = new Object();
+    public static final Object EVAL_VALUE_NULL  = new Object();
 
     Function getFunction(String funcName);
 
     void registerFunction(String funcName, Function function);
+
+    void unregisterFunction(String funcName);
 
     List<Object> getParameters();
 

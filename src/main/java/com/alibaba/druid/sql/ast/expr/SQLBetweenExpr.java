@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,18 @@
  */
 package com.alibaba.druid.sql.ast.expr;
 
-import java.io.Serializable;
-
+import com.alibaba.druid.sql.ast.SQLDataType;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLExprImpl;
+import com.alibaba.druid.sql.ast.SQLObject;
+import com.alibaba.druid.sql.ast.SQLReplaceable;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+
+public class SQLBetweenExpr extends SQLExprImpl implements SQLReplaceable, Serializable {
 
     private static final long serialVersionUID = 1L;
     public SQLExpr            testExpr;
@@ -33,40 +38,51 @@ public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
 
     }
 
-    public SQLBetweenExpr(SQLExpr testExpr, SQLExpr beginExpr, SQLExpr endExpr){
+    public SQLBetweenExpr clone() {
+        SQLBetweenExpr x = new SQLBetweenExpr();
+        if (testExpr != null) {
+            x.setTestExpr(testExpr.clone());
+        }
+        x.not = not;
+        if (beginExpr != null) {
+            x.setBeginExpr(beginExpr.clone());
+        }
+        if (endExpr != null) {
+            x.setEndExpr(endExpr.clone());
+        }
+        return x;
+    }
 
-        this.testExpr = testExpr;
-        this.beginExpr = beginExpr;
-        this.endExpr = endExpr;
+    public SQLBetweenExpr(SQLExpr testExpr, SQLExpr beginExpr, SQLExpr endExpr){
+        setTestExpr(testExpr);
+        setBeginExpr(beginExpr);
+        setEndExpr(endExpr);
     }
 
     public SQLBetweenExpr(SQLExpr testExpr, boolean not, SQLExpr beginExpr, SQLExpr endExpr){
-
-        this.testExpr = testExpr;
+        this(testExpr, beginExpr, endExpr);
         this.not = not;
-        this.beginExpr = beginExpr;
-        this.endExpr = endExpr;
-    }
-
-    public void output(StringBuffer buf) {
-        this.testExpr.output(buf);
-        if (this.not) {
-            buf.append(" NOT BETWEEN ");
-        } else {
-            buf.append(" BETWEEN ");
-        }
-        this.beginExpr.output(buf);
-        buf.append(" AND ");
-        this.endExpr.output(buf);
     }
 
     protected void accept0(SQLASTVisitor visitor) {
         if (visitor.visit(this)) {
-            acceptChild(visitor, this.testExpr);
-            acceptChild(visitor, this.beginExpr);
-            acceptChild(visitor, this.endExpr);
+            if (this.testExpr != null) {
+                this.testExpr.accept(visitor);
+            }
+
+            if (this.beginExpr != null) {
+                this.beginExpr.accept(visitor);
+            }
+
+            if (this.endExpr != null) {
+                this.endExpr.accept(visitor);
+            }
         }
         visitor.endVisit(this);
+    }
+
+    public List<SQLObject> getChildren() {
+        return Arrays.<SQLObject>asList(this.testExpr, beginExpr, this.endExpr);
     }
 
     public SQLExpr getTestExpr() {
@@ -74,6 +90,9 @@ public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
     }
 
     public void setTestExpr(SQLExpr testExpr) {
+        if (testExpr != null) {
+            testExpr.setParent(this);
+        }
         this.testExpr = testExpr;
     }
 
@@ -90,6 +109,9 @@ public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
     }
 
     public void setBeginExpr(SQLExpr beginExpr) {
+        if (beginExpr != null) {
+            beginExpr.setParent(this);
+        }
         this.beginExpr = beginExpr;
     }
 
@@ -98,6 +120,9 @@ public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
     }
 
     public void setEndExpr(SQLExpr endExpr) {
+        if (endExpr != null) {
+            endExpr.setParent(this);
+        }
         this.endExpr = endExpr;
     }
 
@@ -149,5 +174,30 @@ public class SQLBetweenExpr extends SQLExprImpl implements Serializable {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public SQLDataType computeDataType() {
+        return SQLBooleanExpr.DATA_TYPE;
+    }
+
+    @Override
+    public boolean replace(SQLExpr expr, SQLExpr target) {
+        if (expr == testExpr) {
+            setTestExpr(target);
+            return true;
+        }
+
+        if (expr == beginExpr) {
+            setBeginExpr(target);
+            return true;
+        }
+
+        if (expr == endExpr) {
+            setEndExpr(target);
+            return true;
+        }
+
+        return false;
     }
 }

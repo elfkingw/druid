@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,17 @@ package com.alibaba.druid.sql.dialect.oracle.ast.expr;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLExprImpl;
+import com.alibaba.druid.sql.ast.SQLObject;
+import com.alibaba.druid.sql.ast.SQLReplaceable;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class OracleIsSetExpr extends SQLExprImpl implements OracleExpr {
+import java.util.Collections;
+import java.util.List;
 
-    private static final long serialVersionUID = 1L;
+public class OracleIsSetExpr extends SQLExprImpl implements OracleExpr, SQLReplaceable {
 
-    private SQLExpr           nestedTable;
+    private SQLExpr nestedTable;
 
     public OracleIsSetExpr(){
     }
@@ -33,11 +36,31 @@ public class OracleIsSetExpr extends SQLExprImpl implements OracleExpr {
         this.nestedTable = nestedTable;
     }
 
+    public OracleIsSetExpr clone() {
+        OracleIsSetExpr x = new OracleIsSetExpr();
+        if (nestedTable != null) {
+            x.setNestedTable(nestedTable.clone());
+        }
+        return x;
+    }
+
+    @Override
+    public boolean replace(SQLExpr expr, SQLExpr target) {
+        if (this.nestedTable == expr) {
+            setNestedTable(target);
+            return true;
+        }
+        return false;
+    }
+
     public SQLExpr getNestedTable() {
         return nestedTable;
     }
 
     public void setNestedTable(SQLExpr nestedTable) {
+        if (nestedTable != null) {
+            nestedTable.setParent(this);
+        }
         this.nestedTable = nestedTable;
     }
 
@@ -51,6 +74,12 @@ public class OracleIsSetExpr extends SQLExprImpl implements OracleExpr {
         if (visitor.visit(this)) {
             acceptChild(visitor, nestedTable);
         }
+        visitor.endVisit(this);
+    }
+
+    @Override
+    public List<SQLObject> getChildren() {
+        return Collections.<SQLObject>singletonList(this.nestedTable);
     }
 
     @Override

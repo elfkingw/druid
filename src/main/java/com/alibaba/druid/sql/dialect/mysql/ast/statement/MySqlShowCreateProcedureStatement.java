@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,7 @@ import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 
 public class MySqlShowCreateProcedureStatement extends MySqlStatementImpl implements MySqlShowStatement {
 
-    private static final long serialVersionUID = 1L;
-
-    private SQLExpr           name;
+    private SQLExpr name;
 
     public void accept0(MySqlASTVisitor visitor) {
         if (visitor.visit(this)) {

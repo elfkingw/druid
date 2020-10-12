@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,25 @@
  */
 package com.alibaba.druid.sql.dialect.mysql.ast.statement;
 
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
-
 public class MySqlResetStatement extends MySqlStatementImpl {
-	private static final long serialVersionUID = 1L;
 
-	private List<String> options = new ArrayList<String>();
+    private List<String> options = new ArrayList<String>();
 
-	public List<String> getOptions() {
-		return options;
-	}
+    public List<String> getOptions() {
+        return options;
+    }
 
-	public void setOptions(List<String> options) {
-		this.options = options;
-	}
+    public void setOptions(List<String> options) {
+        this.options = options;
+    }
 
-	public void accept0(MySqlASTVisitor visitor) {
+    public void accept0(MySqlASTVisitor visitor) {
         visitor.visit(this);
+        visitor.endVisit(this);
     }
 }

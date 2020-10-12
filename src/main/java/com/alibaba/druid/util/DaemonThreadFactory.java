@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author sandzhang<sandzhangtoo@gmail.com>
+ * @author sandzhang [sandzhangtoo@gmail.com]
  */
 public class DaemonThreadFactory implements ThreadFactory {
 
@@ -32,7 +32,8 @@ public class DaemonThreadFactory implements ThreadFactory {
     }
 
     public Thread newThread(Runnable r) {
-        Thread newThread = new Thread(r, nameStart + threadNo.getAndIncrement() + nameEnd);
+        String threadName = nameStart + threadNo.getAndIncrement() + nameEnd;
+        Thread newThread = new Thread(r, threadName);
         newThread.setDaemon(true);
         if (newThread.getPriority() != Thread.NORM_PRIORITY) {
             newThread.setPriority(Thread.NORM_PRIORITY);

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,21 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.ast.stmt;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectPivot.Item;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OracleSelectUnPivot extends OracleSelectPivotBase {
 
-    private static final long                  serialVersionUID = 1L;
+    private NullsIncludeType nullsIncludeType;
+    private final List<SQLExpr> items = new ArrayList<SQLExpr>();
 
-    private NullsIncludeType                   nullsIncludeType;
-    private final List<SQLExpr>                items            = new ArrayList<SQLExpr>();
+    private final List<Item> pivotIn = new ArrayList<Item>();
 
-    private final List<OracleSelectPivot.Item> pivotIn          = new ArrayList<Item>();
-
-    public OracleSelectUnPivot(){
+    public OracleSelectUnPivot() {
 
     }
 
@@ -43,12 +41,19 @@ public class OracleSelectUnPivot extends OracleSelectPivotBase {
         visitor.endVisit(this);
     }
 
-    public List<OracleSelectPivot.Item> getPivotIn() {
+    public List<Item> getPivotIn() {
         return this.pivotIn;
     }
 
     public List<SQLExpr> getItems() {
         return this.items;
+    }
+
+    public void addItem(SQLExpr item) {
+        if (item != null) {
+            item.setParent(this);
+        }
+        this.items.add(item);
     }
 
     public NullsIncludeType getNullsIncludeType() {
@@ -62,15 +67,43 @@ public class OracleSelectUnPivot extends OracleSelectPivotBase {
     public static enum NullsIncludeType {
         INCLUDE_NULLS, EXCLUDE_NULLS;
 
-        public static String toString(NullsIncludeType type) {
+        public static String toString(NullsIncludeType type, boolean ucase) {
             if (INCLUDE_NULLS.equals(type)) {
-                return "INCLUDE NULLS";
+                return ucase ? "INCLUDE NULLS" : "include nulls";
             }
             if (EXCLUDE_NULLS.equals(type)) {
-                return "EXCLUDE NULLS";
+                return ucase ? "EXCLUDE NULLS" : "exclude nulls";
             }
 
             throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    public OracleSelectUnPivot clone() {
+
+        OracleSelectUnPivot x = new OracleSelectUnPivot();
+
+        x.setNullsIncludeType(nullsIncludeType);
+
+        for (SQLExpr e : this.items) {
+            SQLExpr e2 = e.clone();
+            e2.setParent(x);
+            x.getItems().add(e2);
+        }
+
+        for (SQLExpr e : this.pivotFor) {
+            SQLExpr e2 = e.clone();
+            e2.setParent(x);
+            x.getPivotFor().add(e2);
+        }
+
+        for (Item e : this.pivotIn) {
+            Item e2 = e.clone();
+            e2.setParent(x);
+            x.getPivotIn().add(e2);
+        }
+
+        return x;
     }
 }

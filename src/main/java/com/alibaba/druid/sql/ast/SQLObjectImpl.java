@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,26 @@
  */
 package com.alibaba.druid.sql.ast;
 
-import java.io.Serializable;
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.dialect.mysql.ast.MySqlObject;
+import com.alibaba.druid.sql.dialect.oracle.ast.OracleSQLObject;
+import com.alibaba.druid.sql.dialect.postgresql.ast.PGSQLObject;
+import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+public abstract class SQLObjectImpl implements SQLObject {
 
-public abstract class SQLObjectImpl implements SQLObject, Serializable {
+    protected SQLObject           parent;
+    protected Map<String, Object> attributes;
+    protected SQLCommentHint      hint;
 
-    private static final long   serialVersionUID = 5569722716326763762L;
-
-    private SQLObject           parent;
-
-    private Map<String, Object> attributes;
+    protected int sourceLine;
+    protected int sourceColumn;
 
     public SQLObjectImpl(){
     }
@@ -45,11 +51,15 @@ public abstract class SQLObjectImpl implements SQLObject, Serializable {
         visitor.postVisit(this);
     }
 
-    protected abstract void accept0(SQLASTVisitor visitor);
+    protected abstract void accept0(SQLASTVisitor v);
 
     protected final void acceptChild(SQLASTVisitor visitor, List<? extends SQLObject> children) {
-        for (SQLObject child : children) {
-            acceptChild(visitor, child);
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            acceptChild(visitor, children.get(i));
         }
     }
 
@@ -62,7 +72,24 @@ public abstract class SQLObjectImpl implements SQLObject, Serializable {
     }
 
     public void output(StringBuffer buf) {
-        buf.append(super.toString());
+        output((Appendable) buf);
+    }
+
+    public void output(Appendable buf) {
+        DbType dbType = null;
+        if (this instanceof OracleSQLObject) {
+            dbType = DbType.oracle;
+        } else if (this instanceof MySqlObject) {
+            dbType = DbType.mysql;
+        } else if (this instanceof PGSQLObject) {
+            dbType = DbType.postgresql;
+        } else if (this instanceof SQLDbTypedObject) {
+            dbType = ((SQLDbTypedObject) this).getDbType();
+        }
+
+        accept(
+                SQLUtils.createOutputVisitor(buf, dbType)
+        );
     }
 
     public String toString() {
@@ -95,6 +122,14 @@ public abstract class SQLObjectImpl implements SQLObject, Serializable {
         return attributes.get(name);
     }
 
+    public boolean containsAttribute(String name) {
+        if (attributes == null) {
+            return false;
+        }
+
+        return attributes.containsKey(name);
+    }
+
     public void putAttribute(String name, Object value) {
         if (attributes == null) {
             attributes = new HashMap<String, Object>(1);
@@ -105,5 +140,148 @@ public abstract class SQLObjectImpl implements SQLObject, Serializable {
 
     public Map<String, Object> getAttributesDirect() {
         return attributes;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void addBeforeComment(String comment) {
+        if (comment == null) {
+            return;
+        }
+        
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>(1);
+        }
+        
+        List<String> comments = (List<String>) attributes.get("rowFormat.before_comment");
+        if (comments == null) {
+            comments = new ArrayList<String>(2);
+            attributes.put("rowFormat.before_comment", comments);
+        }
+        
+        comments.add(comment);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void addBeforeComment(List<String> comments) {
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>(1);
+        }
+        
+        List<String> attrComments = (List<String>) attributes.get("rowFormat.before_comment");
+        if (attrComments == null) {
+            attributes.put("rowFormat.before_comment", comments);
+        } else {
+            attrComments.addAll(comments);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<String> getBeforeCommentsDirect() {
+        if (attributes == null) {
+            return null;
+        }
+        
+        return (List<String>) attributes.get("rowFormat.before_comment");
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void addAfterComment(String comment) {
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>(1);
+        }
+        
+        List<String> comments = (List<String>) attributes.get("rowFormat.after_comment");
+        if (comments == null) {
+            comments = new ArrayList<String>(2);
+            attributes.put("rowFormat.after_comment", comments);
+        }
+        
+        comments.add(comment);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public void addAfterComment(List<String> comments) {
+        if (comments == null) {
+            return;
+        }
+
+        if (attributes == null) {
+            attributes = new HashMap<String, Object>(1);
+        }
+        
+        List<String> attrComments = (List<String>) attributes.get("rowFormat.after_comment");
+        if (attrComments == null) {
+            attributes.put("rowFormat.after_comment", comments);
+        } else {
+            attrComments.addAll(comments);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<String> getAfterCommentsDirect() {
+        if (attributes == null) {
+            return null;
+        }
+        
+        return (List<String>) attributes.get("rowFormat.after_comment");
+    }
+    
+    public boolean hasBeforeComment() {
+        if (attributes == null) {
+            return false;
+        }
+
+        List<String> comments = (List<String>) attributes.get("rowFormat.before_comment");
+
+        if (comments == null) {
+            return false;
+        }
+        
+        return !comments.isEmpty();
+    }
+    
+    public boolean hasAfterComment() {
+        if (attributes == null) {
+            return false;
+        }
+
+        List<String> comments = (List<String>) attributes.get("rowFormat.after_comment");
+        if (comments == null) {
+            return false;
+        }
+        
+        return !comments.isEmpty();
+    }
+
+    public SQLObject clone() {
+        throw new UnsupportedOperationException(this.getClass().getName());
+    }
+
+    public SQLDataType computeDataType() {
+        return null;
+    }
+
+    public int getSourceLine() {
+        return sourceLine;
+    }
+
+    public void setSourceLine(int sourceLine) {
+        this.sourceLine = sourceLine;
+    }
+
+    public int getSourceColumn() {
+        return sourceColumn;
+    }
+
+    public void setSourceColumn(int sourceColumn) {
+        this.sourceColumn = sourceColumn;
+    }
+
+    public SQLCommentHint getHint() {
+        return hint;
+    }
+
+    public void setHint(SQLCommentHint hint) {
+        this.hint = hint;
     }
 }

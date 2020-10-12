@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,62 +15,75 @@
  */
 package com.alibaba.druid.sql.dialect.mysql.ast.statement;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLCommentHint;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLName;
-import com.alibaba.druid.sql.ast.SQLObjectImpl;
-import com.alibaba.druid.sql.ast.SQLOrderBy;
+import com.alibaba.druid.sql.ast.SQLWindow;
+import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
+import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlObject;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-@SuppressWarnings("serial")
-public class MySqlSelectQueryBlock extends SQLSelectQueryBlock implements MySqlObject {
+import java.util.ArrayList;
+import java.util.List;
 
+public class MySqlSelectQueryBlock extends SQLSelectQueryBlock implements MySqlObject {
     private boolean              hignPriority;
     private boolean              straightJoin;
-
     private boolean              smallResult;
     private boolean              bigResult;
     private boolean              bufferResult;
     private Boolean              cache;
     private boolean              calcFoundRows;
-
-    private SQLOrderBy           orderBy;
-
-    private Limit                limit;
-
     private SQLName              procedureName;
-    private List<SQLExpr>        procedureArgumentList = new ArrayList<SQLExpr>();
-
-    private boolean              forUpdate             = false;
-    private boolean              lockInShareMode       = false;
-
-    private List<SQLCommentHint> hints                 = new ArrayList<SQLCommentHint>();
+    private List<SQLExpr>        procedureArgumentList;
+    private boolean              lockInShareMode;
+    private SQLName              forcePartition; // for petadata
 
     public MySqlSelectQueryBlock(){
-
+        dbType = DbType.mysql;
     }
 
-    public List<SQLCommentHint> getHints() {
-        return hints;
+    public MySqlSelectQueryBlock clone() {
+        MySqlSelectQueryBlock x = new MySqlSelectQueryBlock();
+        cloneTo(x);
+
+        x.hignPriority = hignPriority;
+        x.straightJoin = straightJoin;
+
+        x.smallResult = smallResult;
+        x.bigResult = bigResult;
+        x.bufferResult = bufferResult;
+        x.cache = cache;
+        x.calcFoundRows = calcFoundRows;
+
+        if (procedureName != null) {
+            x.setProcedureName(procedureName.clone());
+        }
+        if (procedureArgumentList != null) {
+            for (SQLExpr arg : procedureArgumentList) {
+                SQLExpr arg_cloned = arg.clone();
+                arg_cloned.setParent(this);
+                x.procedureArgumentList.add(arg_cloned);
+            }
+        }
+        x.lockInShareMode = lockInShareMode;
+
+        return x;
     }
 
-    public void setHints(List<SQLCommentHint> hints) {
-        this.hints = hints;
+    public int getHintsSize() {
+        if (hints == null) {
+            return 0;
+        }
+
+        return hints.size();
     }
 
-    public boolean isForUpdate() {
-        return forUpdate;
-    }
-
-    public void setForUpdate(boolean forUpdate) {
-        this.forUpdate = forUpdate;
-    }
 
     public boolean isLockInShareMode() {
         return lockInShareMode;
@@ -89,11 +102,10 @@ public class MySqlSelectQueryBlock extends SQLSelectQueryBlock implements MySqlO
     }
 
     public List<SQLExpr> getProcedureArgumentList() {
+        if (procedureArgumentList == null) {
+            procedureArgumentList = new ArrayList<SQLExpr>(2);
+        }
         return procedureArgumentList;
-    }
-
-    public void setProcedureArgumentList(List<SQLExpr> procedureArgumentList) {
-        this.procedureArgumentList = procedureArgumentList;
     }
 
     public boolean isHignPriority() {
@@ -152,23 +164,47 @@ public class MySqlSelectQueryBlock extends SQLSelectQueryBlock implements MySqlO
         this.calcFoundRows = calcFoundRows;
     }
 
-    public SQLOrderBy getOrderBy() {
-        return orderBy;
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        MySqlSelectQueryBlock that = (MySqlSelectQueryBlock) o;
+
+        if (hignPriority != that.hignPriority) return false;
+        if (straightJoin != that.straightJoin) return false;
+        if (smallResult != that.smallResult) return false;
+        if (bigResult != that.bigResult) return false;
+        if (bufferResult != that.bufferResult) return false;
+        if (calcFoundRows != that.calcFoundRows) return false;
+        if (lockInShareMode != that.lockInShareMode) return false;
+        if (cache != null ? !cache.equals(that.cache) : that.cache != null) return false;
+        if (procedureName != null ? !procedureName.equals(that.procedureName) : that.procedureName != null)
+            return false;
+        if (procedureArgumentList != null ? !procedureArgumentList.equals(that.procedureArgumentList) :
+                that.procedureArgumentList != null) return false;
+        if (hints != null ? !hints.equals(that.hints) : that.hints != null) return false;
+        if (forcePartition != null ? !forcePartition.equals(that.forcePartition) : that.forcePartition != null)
+            return false;
+
+        return true;
     }
 
-    public void setOrderBy(SQLOrderBy orderBy) {
-        this.orderBy = orderBy;
-    }
-
-    public Limit getLimit() {
-        return limit;
-    }
-
-    public void setLimit(Limit limit) {
-        if (limit != null) {
-            limit.setParent(this);
-        }
-        this.limit = limit;
+    @Override public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (hignPriority ? 1 : 0);
+        result = 31 * result + (straightJoin ? 1 : 0);
+        result = 31 * result + (smallResult ? 1 : 0);
+        result = 31 * result + (bigResult ? 1 : 0);
+        result = 31 * result + (bufferResult ? 1 : 0);
+        result = 31 * result + (cache != null ? cache.hashCode() : 0);
+        result = 31 * result + (calcFoundRows ? 1 : 0);
+        result = 31 * result + (procedureName != null ? procedureName.hashCode() : 0);
+        result = 31 * result + (procedureArgumentList != null ? procedureArgumentList.hashCode() : 0);
+        result = 31 * result + (lockInShareMode ? 1 : 0);
+        result = 31 * result + (hints != null ? hints.hashCode() : 0);
+        result = 31 * result + (forcePartition != null ? forcePartition.hashCode() : 0);
+        return result;
     }
 
     @Override
@@ -178,75 +214,101 @@ public class MySqlSelectQueryBlock extends SQLSelectQueryBlock implements MySqlO
             return;
         }
 
-        if (visitor.visit(this)) {
-            acceptChild(visitor, this.selectList);
-            acceptChild(visitor, this.from);
-            acceptChild(visitor, this.where);
-            acceptChild(visitor, this.groupBy);
-            acceptChild(visitor, this.orderBy);
-            acceptChild(visitor, this.limit);
-            acceptChild(visitor, this.procedureName);
-            acceptChild(visitor, this.procedureArgumentList);
-            acceptChild(visitor, this.into);
-        }
-
-        visitor.endVisit(this);
+        super.accept0(visitor);
     }
 
     @Override
     public void accept0(MySqlASTVisitor visitor) {
         if (visitor.visit(this)) {
-            acceptChild(visitor, this.selectList);
-            acceptChild(visitor, this.from);
-            acceptChild(visitor, this.where);
-            acceptChild(visitor, this.groupBy);
-            acceptChild(visitor, this.orderBy);
-            acceptChild(visitor, this.limit);
-            acceptChild(visitor, this.procedureName);
-            acceptChild(visitor, this.procedureArgumentList);
-            acceptChild(visitor, this.into);
+            for (int i = 0; i < this.selectList.size(); i++) {
+                SQLSelectItem item = this.selectList.get(i);
+                if (item != null) {
+                    item.accept(visitor);
+                }
+            }
+
+            if (this.from != null) {
+                this.from.accept(visitor);
+            }
+
+            if (this.into != null) {
+                this.into.accept(visitor);
+            }
+
+            if (this.where != null) {
+                this.where.accept(visitor);
+            }
+
+            if (this.startWith != null) {
+                this.startWith.accept(visitor);
+            }
+
+            if (this.connectBy != null) {
+                this.connectBy.accept(visitor);
+            }
+
+            if (this.groupBy != null) {
+                this.groupBy.accept(visitor);
+            }
+
+            if (this.windows != null) {
+                for (SQLWindow item : windows) {
+                    item.accept(visitor);
+                }
+            }
+
+            if (this.orderBy != null) {
+                this.orderBy.accept(visitor);
+            }
+
+            if (this.distributeBy != null) {
+                for (int i = 0; i < distributeBy.size(); i++) {
+                    SQLSelectOrderByItem item = distributeBy.get(i);
+                    item.accept(visitor);
+                }
+            }
+
+            if (this.sortBy != null) {
+                for (int i = 0; i < sortBy.size(); i++) {
+                    SQLSelectOrderByItem item = sortBy.get(i);
+                    item.accept(visitor);
+                }
+            }
+
+            if (this.waitTime != null) {
+                this.waitTime.accept(visitor);
+            }
+
+            if (this.limit != null) {
+                this.limit.accept(visitor);
+            }
+
+            if (this.procedureName != null) {
+                this.procedureName.accept(visitor);
+            }
+
+            if (this.procedureArgumentList != null) {
+                for (SQLExpr item : procedureArgumentList) {
+                    item.accept(visitor);
+                }
+            }
         }
 
         visitor.endVisit(this);
     }
 
-    public static class Limit extends SQLObjectImpl {
-
-        public Limit(){
-
-        }
-
-        private SQLExpr rowCount;
-        private SQLExpr offset;
-
-        public SQLExpr getRowCount() {
-            return rowCount;
-        }
-
-        public void setRowCount(SQLExpr rowCount) {
-            this.rowCount = rowCount;
-        }
-
-        public SQLExpr getOffset() {
-            return offset;
-        }
-
-        public void setOffset(SQLExpr offset) {
-            this.offset = offset;
-        }
-
-        @Override
-        protected void accept0(SQLASTVisitor visitor) {
-            if (visitor instanceof MySqlASTVisitor) {
-                MySqlASTVisitor mysqlVisitor = (MySqlASTVisitor) visitor;
-
-                if (mysqlVisitor.visit(this)) {
-                    acceptChild(visitor, offset);
-                    acceptChild(visitor, rowCount);
-                }
-            }
-        }
-
+    public SQLName getForcePartition() {
+        return forcePartition;
     }
 
+    public void setForcePartition(SQLName x) {
+        if (x != null) {
+            x.setParent(this);
+        }
+        this.forcePartition = x;
+    }
+
+    public String toString() {
+        return SQLUtils.toMySqlString(this);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,34 @@
  */
 package com.alibaba.druid.sql.ast.statement;
 
-import com.alibaba.druid.sql.ast.SQLName;
-import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.SQLStatementImpl;
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.ast.*;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLUseStatement extends SQLStatementImpl implements SQLStatement {
+import java.util.Collections;
+import java.util.List;
 
-    private static final long serialVersionUID = 1L;
-    private SQLName           database;
+public class SQLUseStatement extends SQLStatementImpl implements SQLReplaceable {
+
+    private SQLName database;
+    
+    public SQLUseStatement() {
+        
+    }
+    
+    public SQLUseStatement(DbType dbType) {
+        super (dbType);
+    }
 
     public SQLName getDatabase() {
         return database;
     }
 
-    public void setDatabase(SQLName database) {
-        this.database = database;
+    public void setDatabase(SQLName x) {
+        if (x != null) {
+            x.setParent(this);
+        }
+        this.database = x;
     }
 
     @Override
@@ -41,4 +53,18 @@ public class SQLUseStatement extends SQLStatementImpl implements SQLStatement {
         visitor.endVisit(this);
     }
 
+    @Override
+    public boolean replace(SQLExpr expr, SQLExpr target) {
+        if (this.database == expr) {
+            setDatabase((SQLName) target);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public List<SQLObject> getChildren() {
+        return Collections.<SQLObject>singletonList(database);
+    }
 }

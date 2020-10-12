@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,22 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.ast.stmt;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.OracleSQLObjectImpl;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OracleFileSpecification extends OracleSQLObjectImpl {
 
-    private static final long serialVersionUID = 1L;
+    private List<SQLExpr> fileNames     = new ArrayList<SQLExpr>();
 
-    private List<SQLExpr>     fileNames        = new ArrayList<SQLExpr>();
+    private SQLExpr       size;
 
-    private SQLExpr           size;
+    private boolean       autoExtendOff = false;
 
-    private boolean           autoExtendOff    = false;
-
-    private SQLExpr           autoExtendOn;
+    private SQLExpr       autoExtendOn;
 
     @Override
     public void accept0(OracleASTVisitor visitor) {

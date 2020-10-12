@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class SqlMapClientImplWrapper extends SqlMapClientImpl {
 
 	private static Method getLocalSqlMapSessionMethod = null;
 
-	private ConcurrentMap<String, IbatisStatementInfo> statementInfoMap = new ConcurrentHashMap<String, IbatisStatementInfo>();
+	private ConcurrentMap<String, IbatisStatementInfo> statementInfoMap = new ConcurrentHashMap<String, IbatisStatementInfo>(16, 0.75f, 1);
 
 	public SqlMapClientImplWrapper(SqlMapClientImpl raw) {
 		super(raw.getDelegate());

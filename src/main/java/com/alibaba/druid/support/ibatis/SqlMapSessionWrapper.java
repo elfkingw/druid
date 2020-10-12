@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,8 +48,8 @@ public class SqlMapSessionWrapper extends SqlMapExecutorWrapper implements SqlMa
         session.endTransaction();
     }
 
-    public void setUserConnection(Connection connnection) throws SQLException {
-        session.setUserConnection(connnection);
+    public void setUserConnection(Connection connection) throws SQLException {
+        session.setUserConnection(connection);
     }
 
     @Deprecated

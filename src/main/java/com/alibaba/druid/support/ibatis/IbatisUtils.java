@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,19 +32,20 @@ public class IbatisUtils {
 
     private static Method  methodGetId       = null;
     private static Method  methodGetResource = null;
+    private static Field sessionField;
 
     static {
         try {
             Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass("com.ibatis.sqlmap.engine.mapping.result.AutoResultMap");
             Method[] methods = clazz.getMethods();
             for (Method method : methods) {
-                if (method.equals("setResultObjectValues")) { // ibatis 2.3.4 add method 'setResultObjectValues'
+                if (method.getName().equals("setResultObjectValues")) { // ibatis 2.3.4 add method 'setResultObjectValues'
                     VERSION_2_3_4 = true;
                     break;
                 }
             }
         } catch (Throwable e) {
-            // skip
+            LOG.error("Error while initializing", e);
         }
     }
 
@@ -106,9 +107,7 @@ public class IbatisUtils {
             return null;
         }
     }
-    
-    private static Field sessionField;
-    
+
     public static void set(SqlMapSessionImpl session, SqlMapClientImpl client) {
         if (sessionField == null) {
             for (Field field : SqlMapSessionImpl.class.getDeclaredFields()) {

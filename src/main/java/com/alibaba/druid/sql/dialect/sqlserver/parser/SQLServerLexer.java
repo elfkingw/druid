@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,13 @@
  */
 package com.alibaba.druid.sql.dialect.sqlserver.parser;
 
-import static com.alibaba.druid.sql.parser.LayoutCharacters.EOI;
-import static com.alibaba.druid.sql.parser.Token.IDENTIFIER;
+import com.alibaba.druid.sql.parser.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.druid.sql.parser.Keywords;
-import com.alibaba.druid.sql.parser.Lexer;
-import com.alibaba.druid.sql.parser.NotAllowCommentException;
-import com.alibaba.druid.sql.parser.Token;
+import static com.alibaba.druid.sql.parser.LayoutCharacters.EOI;
+import static com.alibaba.druid.sql.parser.Token.IDENTIFIER;
 
 public class SQLServerLexer extends Lexer {
 
@@ -40,6 +37,16 @@ public class SQLServerLexer extends Lexer {
         map.put("USE", Token.USE);
         map.put("WITH", Token.WITH);
         map.put("PERCENT", Token.PERCENT);
+        map.put("IDENTITY", Token.IDENTITY);
+        map.put("DECLARE", Token.DECLARE);
+        map.put("IF", Token.IF);
+        map.put("ELSE", Token.ELSE);
+        map.put("BEGIN", Token.BEGIN);
+        map.put("END", Token.END);
+
+        map.put("MERGE", Token.MERGE);
+        map.put("USING", Token.USING);
+        map.put("MATCHED", Token.MATCHED);
 
         DEFAULT_SQL_SERVER_KEYWORDS = new Keywords(map);
     }
@@ -52,6 +59,14 @@ public class SQLServerLexer extends Lexer {
     public SQLServerLexer(String input){
         super(input);
         super.keywods = DEFAULT_SQL_SERVER_KEYWORDS;
+    }
+
+    public SQLServerLexer(String input, SQLParserFeature... features){
+        super(input);
+        super.keywods = DEFAULT_SQL_SERVER_KEYWORDS;
+        for (SQLParserFeature feature : features) {
+            config(feature, true);
+        }
     }
     
     public void scanComment() {
@@ -99,17 +114,17 @@ public class SQLServerLexer extends Lexer {
             } else {
                 stringVal = subString(mark, bufPos);
                 token = Token.MULTI_LINE_COMMENT;
+                commentCount++;
+                if (keepComments) {
+                    addComment(stringVal);
+                }
             }
 
-            if (token != Token.HINT && !isAllowComment()) {
+            if (token != Token.HINT && !isAllowComment() && !isSafeComment(stringVal)) {
                 throw new NotAllowCommentException();
             }
 
             return;
-        }
-
-        if (!isAllowComment()) {
-            throw new NotAllowCommentException();
         }
 
         if (ch == '/' || ch == '-') {
@@ -141,6 +156,15 @@ public class SQLServerLexer extends Lexer {
 
             stringVal = subString(mark + 1, bufPos);
             token = Token.LINE_COMMENT;
+            commentCount++;
+            if (keepComments) {
+                addComment(stringVal);
+            }
+            endOfComment = isEOF();
+            
+            if (!isAllowComment() && (isEOF() || !isSafeComment(stringVal))) {
+                throw new NotAllowCommentException();
+            }
             return;
         }
     }

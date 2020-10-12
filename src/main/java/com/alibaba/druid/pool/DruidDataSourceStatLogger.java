@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,25 @@
  */
 package com.alibaba.druid.pool;
 
+import java.util.Properties;
+
+import com.alibaba.druid.support.logging.Log;
+
+/**
+ * @author wenshao [szujobs@hotmail.com]
+ * @since 0.2.19
+ */
 public interface DruidDataSourceStatLogger {
 
     void log(DruidDataSourceStatValue statValue);
+
+    /**
+     * @param properties
+     * @since 0.2.21
+     */
+    void configFromProperties(Properties properties);
+    
+    void setLogger(Log logger);
+    
+    void setLoggerName(String loggerName);
 }

@@ -1,5 +1,14 @@
-sp_executesql
+db_name
+col_name
 user_name
+host_name
 is_srvrolemember
-DB_NAME
-HOST_NAME
+is_member
+opendatasource
+openrowset
+openquery
+has_dbaccess
+sp_executesql
+pg_sleep
+user
+system_user

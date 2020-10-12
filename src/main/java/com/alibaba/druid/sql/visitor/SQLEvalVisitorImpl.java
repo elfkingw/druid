@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,13 @@
  */
 package com.alibaba.druid.sql.visitor;
 
+import com.alibaba.druid.sql.ast.expr.*;
+import com.alibaba.druid.sql.visitor.functions.Function;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
-import com.alibaba.druid.sql.ast.expr.SQLCaseExpr;
-import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
-import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
-import com.alibaba.druid.sql.ast.expr.SQLInListExpr;
-import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
-import com.alibaba.druid.sql.ast.expr.SQLMethodInvokeExpr;
-import com.alibaba.druid.sql.ast.expr.SQLNullExpr;
-import com.alibaba.druid.sql.ast.expr.SQLNumberExpr;
-import com.alibaba.druid.sql.ast.expr.SQLQueryExpr;
-import com.alibaba.druid.sql.ast.expr.SQLVariantRefExpr;
-import com.alibaba.druid.sql.visitor.functions.Function;
 
 public class SQLEvalVisitorImpl extends SQLASTVisitorAdapter implements SQLEvalVisitor {
 
@@ -86,6 +76,10 @@ public class SQLEvalVisitorImpl extends SQLASTVisitorAdapter implements SQLEvalV
     public boolean visit(SQLNumberExpr x) {
         return SQLEvalVisitorUtils.visit(this, x);
     }
+    
+    public boolean visit(SQLHexExpr x) {
+        return SQLEvalVisitorUtils.visit(this, x);
+    }
 
     @Override
     public boolean visit(SQLCaseExpr x) {
@@ -131,6 +125,22 @@ public class SQLEvalVisitorImpl extends SQLASTVisitorAdapter implements SQLEvalV
     }
     
     public boolean visit(SQLIdentifierExpr x) {
+        return SQLEvalVisitorUtils.visit(this, x);
+    }
+
+    @Override
+    public void unregisterFunction(String funcName) {
+        functions.remove(funcName);
+    }
+    
+    @Override
+    public boolean visit(SQLBooleanExpr x) {
+        x.getAttributes().put(EVAL_VALUE, x.getBooleanValue());
+        return false;
+    }
+
+    @Override
+    public boolean visit(SQLBinaryExpr x) {
         return SQLEvalVisitorUtils.visit(this, x);
     }
 }

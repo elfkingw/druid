@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,19 @@ import com.alibaba.druid.wall.WallUtils;
 public class DoPrivilegedTest extends TestCase {
 
     public void test_0() throws Exception {
-        Assert.assertFalse(WallUtils.isValidateMySql("select @@version_compile_os  FROM X"));
+        Assert.assertTrue(WallUtils.isValidateMySql("select @@version_compile_os FROM X"));
+    }
+
+    public void test_0_0() throws Exception {
+        Assert.assertFalse(WallUtils.isValidateMySql("select * FROM X where version=@@version_compile_os"));
     }
 
     public void test_1() throws Exception {
         final WallConfig config = new WallConfig();
         config.setDoPrivilegedAllow(true);
-        
+
         WallProvider.doPrivileged(new PrivilegedAction<Object>() {
+
             @Override
             public Object run() {
                 Assert.assertTrue(WallUtils.isValidateMySql("select @@version_compile_os FROM X", config));

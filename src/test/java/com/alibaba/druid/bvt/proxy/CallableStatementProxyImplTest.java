@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ public class CallableStatementProxyImplTest extends TestCase {
         config.getFilters().add(filter);
 
         String sql = "CALL P_0(?, ?)";
-        CallableStatementProxyImpl rawCallStatement = new FakeCallableStatement(null, null, sql, 1001);
+        CallableStatementProxyImpl rawCallStatement = new FakeCallableStatement(new ConnectionProxyImpl(null, null, null, 0), null, sql, 1001);
 
         ConnectionProxy connection = new ConnectionProxyImpl(dataSource, null, new Properties(), 1001);
         CallableStatementProxyImpl cstmt = new CallableStatementProxyImpl(connection, rawCallStatement, sql, 2001);

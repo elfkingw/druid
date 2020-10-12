@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  */
 package com.alibaba.druid.sql.ast.expr;
 
-import java.io.Serializable;
-
 import com.alibaba.druid.sql.ast.SQLExprImpl;
 import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLExistsExpr extends SQLExprImpl implements Serializable {
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+
+public final class SQLExistsExpr extends SQLExprImpl implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public boolean            not              = false;
@@ -32,13 +34,11 @@ public class SQLExistsExpr extends SQLExprImpl implements Serializable {
     }
 
     public SQLExistsExpr(SQLSelect subQuery){
-
-        this.subQuery = subQuery;
+        this.setSubQuery(subQuery);
     }
 
     public SQLExistsExpr(SQLSelect subQuery, boolean not){
-
-        this.subQuery = subQuery;
+        this.setSubQuery(subQuery);
         this.not = not;
     }
 
@@ -55,24 +55,25 @@ public class SQLExistsExpr extends SQLExprImpl implements Serializable {
     }
 
     public void setSubQuery(SQLSelect subQuery) {
-        this.subQuery = subQuery;
-    }
-
-    public void output(StringBuffer buf) {
-        if (this.not) {
-            buf.append("NOT ");
+        if (subQuery != null) {
+            subQuery.setParent(this);
         }
-        buf.append("EXISTS (");
-        this.subQuery.output(buf);
-        buf.append(")");
+        this.subQuery = subQuery;
     }
 
     protected void accept0(SQLASTVisitor visitor) {
         if (visitor.visit(this)) {
-            acceptChild(visitor, this.subQuery);
+            if (this.subQuery != null) {
+                this.subQuery.accept(visitor);
+            }
         }
 
         visitor.endVisit(this);
+    }
+
+    @Override
+    public List getChildren() {
+        return Collections.singletonList(this.subQuery);
     }
 
     @Override
@@ -107,5 +108,16 @@ public class SQLExistsExpr extends SQLExprImpl implements Serializable {
             return false;
         }
         return true;
+    }
+
+    public SQLExistsExpr clone () {
+        SQLExistsExpr x = new SQLExistsExpr();
+
+        x.not = not;
+        if (subQuery != null) {
+            x.setSubQuery(subQuery.clone());
+        }
+
+        return x;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,24 @@ package com.alibaba.druid.sql.dialect.oracle.ast.stmt;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLName;
+import com.alibaba.druid.sql.ast.statement.SQLCreateStatement;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 
-public class OracleCreateDatabaseDbLinkStatement extends OracleStatementImpl {
+public class OracleCreateDatabaseDbLinkStatement extends OracleStatementImpl implements SQLCreateStatement {
 
-    private static final long serialVersionUID = 1L;
+    private boolean shared;
+    private boolean _public;
 
-    private boolean           shared;
-    private boolean           _public;
+    private SQLName name;
 
-    private SQLName           name;
+    private SQLName user;
 
-    private SQLName           user;
+    private String  password;
 
-    private String            password;
+    private SQLExpr using;
 
-    private SQLExpr           using;
-
-    private SQLExpr           authenticatedUser;
-    private String            authenticatedPassword;
+    private SQLExpr authenticatedUser;
+    private String  authenticatedPassword;
 
     public boolean isShared() {
         return shared;

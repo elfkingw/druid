@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +15,46 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.ast.stmt;
 
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.statement.SQLExplainStatement;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
+import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class OracleExplainStatement extends OracleStatementImpl {
+public class OracleExplainStatement extends SQLExplainStatement implements OracleStatement {
 
-    private static final long serialVersionUID = 1L;
-
-    private SQLCharExpr            statementId;
-    private SQLExpr           into;
-    private SQLStatement      forStatement;
+    private SQLExpr statementId;
+    private SQLExpr     into;
+    
+    public OracleExplainStatement() {
+        super (DbType.oracle);
+    }
 
     @Override
     public void accept0(OracleASTVisitor visitor) {
         if (visitor.visit(this)) {
             acceptChild(visitor, statementId);
             acceptChild(visitor, into);
-            acceptChild(visitor, forStatement);
+            acceptChild(visitor, statement);
         }
         visitor.endVisit(this);
     }
 
-    public SQLCharExpr getStatementId() {
+    protected void accept0(SQLASTVisitor visitor) {
+        accept0((OracleASTVisitor) visitor);
+    }
+
+    public String toString() {
+        return SQLUtils.toOracleString(this);
+    }
+
+    public SQLExpr getStatementId() {
         return statementId;
     }
 
-    public void setStatementId(SQLCharExpr statementId) {
+    public void setStatementId(SQLExpr statementId) {
         this.statementId = statementId;
     }
 
@@ -52,14 +64,6 @@ public class OracleExplainStatement extends OracleStatementImpl {
 
     public void setInto(SQLExpr into) {
         this.into = into;
-    }
-
-    public SQLStatement getForStatement() {
-        return forStatement;
-    }
-
-    public void setForStatement(SQLStatement forStatement) {
-        this.forStatement = forStatement;
     }
 
 }

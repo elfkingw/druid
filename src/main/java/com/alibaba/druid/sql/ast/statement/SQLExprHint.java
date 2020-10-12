@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,27 @@ import com.alibaba.druid.sql.ast.SQLHint;
 import com.alibaba.druid.sql.ast.SQLObjectImpl;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-
-@SuppressWarnings("serial")
 public class SQLExprHint extends SQLObjectImpl implements SQLHint {
+
     private SQLExpr expr;
-    
-    public SQLExprHint() {
-        
+
+    public SQLExprHint(){
+
     }
-    
-    public SQLExprHint(SQLExpr expr) {
+
+    public SQLExprHint(SQLExpr expr){
         this.setExpr(expr);
     }
 
     public SQLExpr getExpr() {
         return expr;
     }
-    
+
     public void setExpr(SQLExpr expr) {
         if (expr != null) {
             expr.setParent(this);
         }
-        
+
         this.expr = expr;
     }
 
@@ -52,6 +51,12 @@ public class SQLExprHint extends SQLObjectImpl implements SQLHint {
         }
         visitor.endVisit(this);
     }
-    
-    
+
+    public SQLExprHint clone() {
+        SQLExprHint x = new SQLExprHint();
+        if (expr != null) {
+            x.setExpr(expr.clone());
+        }
+        return x;
+    }
 }

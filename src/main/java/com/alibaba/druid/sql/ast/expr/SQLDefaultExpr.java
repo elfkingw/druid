@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 package com.alibaba.druid.sql.ast.expr;
 
 import com.alibaba.druid.sql.ast.SQLExprImpl;
+import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLDefaultExpr extends SQLExprImpl implements SQLLiteralExpr {
+import java.util.Collections;
+import java.util.List;
 
-    private static final long serialVersionUID = 1L;
+public class SQLDefaultExpr extends SQLExprImpl implements SQLLiteralExpr {
 
     @Override
     public boolean equals(Object o) {
@@ -40,5 +42,13 @@ public class SQLDefaultExpr extends SQLExprImpl implements SQLLiteralExpr {
 
     public String toString() {
         return "DEFAULT";
+    }
+
+    public SQLDefaultExpr clone() {
+        return new SQLDefaultExpr();
+    }
+
+    public List<SQLObject> getChildren() {
+        return Collections.emptyList();
     }
 }

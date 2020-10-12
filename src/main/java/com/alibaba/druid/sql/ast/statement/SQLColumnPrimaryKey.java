@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@ package com.alibaba.druid.sql.ast.statement;
 
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLColumnPrimaryKey extends SQLConstaintImpl implements SQLColumnConstraint {
+public class SQLColumnPrimaryKey extends SQLConstraintImpl implements SQLColumnConstraint {
+    public SQLColumnPrimaryKey() {
 
-    private static final long serialVersionUID = 1L;
+    }
 
     @Override
     protected void accept0(SQLASTVisitor visitor) {
@@ -29,4 +30,11 @@ public class SQLColumnPrimaryKey extends SQLConstaintImpl implements SQLColumnCo
         visitor.endVisit(this);
     }
 
+    public SQLColumnPrimaryKey clone() {
+        SQLColumnPrimaryKey x = new SQLColumnPrimaryKey();
+
+        super.cloneTo(x);
+
+        return x;
+    }
 }

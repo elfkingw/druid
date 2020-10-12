@@ -1,7 +1,9 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License") {
+        return true;
+    }
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -15,620 +17,785 @@
  */
 package com.alibaba.druid.sql.dialect.oracle.visitor;
 
-import com.alibaba.druid.sql.ast.expr.SQLObjectCreateExpr;
+import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.oracle.ast.OracleDataTypeIntervalDay;
 import com.alibaba.druid.sql.dialect.oracle.ast.OracleDataTypeIntervalYear;
-import com.alibaba.druid.sql.dialect.oracle.ast.OracleDataTypeTimestamp;
-import com.alibaba.druid.sql.dialect.oracle.ast.OracleOrderBy;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.CycleClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.FlashbackQueryClause.AsOfFlashbackQueryClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.FlashbackQueryClause.AsOfSnapshotClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.FlashbackQueryClause.VersionsFlashbackQueryClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.GroupingSetExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.ModelClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleErrorLoggingClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleParameter;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OraclePartitionByRangeClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleRangeValuesClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleReturningClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleStorageClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.OracleWithSubqueryEntry;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.PartitionExtensionClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.SampleClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.clause.SearchClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleAggregateExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleAnalytic;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleAnalyticWindowing;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleArgumentExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleBinaryDoubleExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleBinaryFloatExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleCursorExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleDateExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleDatetimeExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleDbLinkExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleExtractExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleIntervalExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleIsSetExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleOuterExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleRangeExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleSizeExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleSysdateExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleTimestampExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterIndexStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterProcedureStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterSessionStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterSynonymStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableAddConstaint;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableDropPartition;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableModify;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableMoveTablespace;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableRenameTo;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableSplitPartition;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableTruncatePartition;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTablespaceAddDataFile;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTablespaceStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTriggerStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterViewStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleBlockStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCommitStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleConstraintState;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCreateDatabaseDbLinkStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCreateIndexStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCreateProcedureStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCreateSequenceStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleCreateTableStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleDeleteStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleDropDatabaseLinkStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleDropSequenceStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleExceptionStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleExitStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleExplainStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleExprStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleFetchStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleFileSpecification;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleForStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleGotoStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleGrantStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleIfStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleIfStatement.Else;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleIfStatement.ElseIf;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleInsertStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleLabelStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleLockTableStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleLoopStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleMergeStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleMultiInsertStatement;
+import com.alibaba.druid.sql.dialect.oracle.ast.clause.*;
+import com.alibaba.druid.sql.dialect.oracle.ast.expr.*;
+import com.alibaba.druid.sql.dialect.oracle.ast.stmt.*;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleMultiInsertStatement.ConditionalInsertClause;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleMultiInsertStatement.ConditionalInsertClauseItem;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleMultiInsertStatement.InsertIntoClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleOrderByItem;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OraclePLSQLCommitStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OraclePrimaryKey;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSavePointStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelect;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectForUpdate;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectHierachicalQueryClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectJoin;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectPivot;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectQueryBlock;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectRestriction;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectSubqueryTableSource;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectTableReference;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectUnPivot;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSetTransactionStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleTableExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleTruncateStatement;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleUpdateSetListClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleUpdateSetListMultiColumnItem;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleUpdateSetListSingleColumnItem;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleUpdateSetValueClause;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleUpdateStatement;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public interface OracleASTVisitor extends SQLASTVisitor {
 
-    void endVisit(OracleAggregateExpr astNode);
 
-    void endVisit(OracleConstraintState astNode);
+    default void endVisit(OracleAnalytic x) {
 
-    void endVisit(OraclePLSQLCommitStatement astNode);
+    }
 
-    void endVisit(OracleAnalytic x);
+    default void endVisit(OracleAnalyticWindowing x) {
 
-    void endVisit(OracleAnalyticWindowing x);
+    }
 
-    void endVisit(OracleDateExpr x);
+    default void endVisit(OracleDeleteStatement x) {
+        endVisit((SQLDeleteStatement) x);
+    }
 
-    void endVisit(OracleDbLinkExpr x);
+    default void endVisit(OracleIntervalExpr x) {
 
-    void endVisit(OracleDeleteStatement x);
+    }
 
-    void endVisit(OracleExtractExpr x);
+    default void endVisit(OracleOuterExpr x) {
 
-    void endVisit(OracleIntervalExpr x);
+    }
 
-    void endVisit(SQLObjectCreateExpr x);
+    default void endVisit(OracleSelectJoin x) {
 
-    void endVisit(OracleOrderBy x);
+    }
 
-    void endVisit(OracleOuterExpr x);
+    default void endVisit(OracleSelectPivot x) {
 
-    void endVisit(OracleSelectForUpdate x);
+    }
 
-    void endVisit(OracleSelectHierachicalQueryClause x);
+    default void endVisit(OracleSelectPivot.Item x) {
 
-    void endVisit(OracleSelectJoin x);
+    }
 
-    void endVisit(OracleOrderByItem x);
+    default void endVisit(OracleSelectRestriction.CheckOption x) {
 
-    void endVisit(OracleSelectPivot x);
+    }
 
-    void endVisit(OracleSelectPivot.Item x);
+    default void endVisit(OracleSelectRestriction.ReadOnly x) {
 
-    void endVisit(OracleSelectRestriction.CheckOption x);
+    }
 
-    void endVisit(OracleSelectRestriction.ReadOnly x);
+    default void endVisit(OracleSelectSubqueryTableSource x) {
 
-    void endVisit(OracleSelectSubqueryTableSource x);
+    }
 
-    void endVisit(OracleSelectUnPivot x);
+    default void endVisit(OracleSelectUnPivot x) {
 
-    void endVisit(OracleTableExpr x);
+    }
 
-    void endVisit(OracleTimestampExpr x);
+    default void endVisit(OracleUpdateStatement x) {
 
-    void endVisit(OracleUpdateSetListClause x);
+    }
 
-    void endVisit(OracleUpdateSetListMultiColumnItem x);
+    default boolean visit(OracleAnalytic x) {
+        return true;
+    }
 
-    void endVisit(OracleUpdateSetListSingleColumnItem x);
+    default boolean visit(OracleAnalyticWindowing x) {
+        return true;
+    }
 
-    void endVisit(OracleUpdateSetValueClause x);
+    default boolean visit(OracleDeleteStatement x) {
+        return visit((SQLDeleteStatement) x);
+    }
 
-    void endVisit(OracleUpdateStatement x);
+    default boolean visit(OracleIntervalExpr x) {
+        return true;
+    }
 
-    boolean visit(OracleAggregateExpr astNode);
+    default boolean visit(OracleOuterExpr x) {
+        return true;
+    }
 
-    boolean visit(OracleConstraintState astNode);
+    default boolean visit(OracleSelectJoin x) {
+        return true;
+    }
 
-    boolean visit(OraclePLSQLCommitStatement astNode);
+    default boolean visit(OracleSelectPivot x) {
+        return true;
+    }
 
-    boolean visit(OracleAnalytic x);
+    default boolean visit(OracleSelectPivot.Item x) {
+        return true;
+    }
 
-    boolean visit(OracleAnalyticWindowing x);
+    default boolean visit(OracleSelectRestriction.CheckOption x) {
+        return true;
+    }
 
-    boolean visit(OracleDateExpr x);
+    default boolean visit(OracleSelectRestriction.ReadOnly x) {
+        return true;
+    }
 
-    boolean visit(OracleDbLinkExpr x);
+    default boolean visit(OracleSelectSubqueryTableSource x) {
+        return true;
+    }
 
-    boolean visit(OracleDeleteStatement x);
+    default boolean visit(OracleSelectUnPivot x) {
+        return true;
+    }
 
-    boolean visit(OracleExtractExpr x);
+    default boolean visit(OracleUpdateStatement x) {
+        return visit((SQLUpdateStatement) x);
+    }
 
-    boolean visit(OracleIntervalExpr x);
+    default boolean visit(SampleClause x) {
+        return true;
+    }
 
-    boolean visit(SQLObjectCreateExpr x);
+    default void endVisit(SampleClause x) {
 
-    boolean visit(OracleOrderBy x);
+    }
 
-    boolean visit(OracleOuterExpr x);
+    default boolean visit(OracleSelectTableReference x) {
+        return true;
+    }
 
-    boolean visit(OracleSelectForUpdate x);
+    default void endVisit(OracleSelectTableReference x) {
 
-    boolean visit(OracleSelectHierachicalQueryClause x);
+    }
 
-    boolean visit(OracleSelectJoin x);
+    default boolean visit(PartitionExtensionClause x) {
+        return true;
+    }
 
-    boolean visit(OracleOrderByItem x);
+    default void endVisit(PartitionExtensionClause x) {
 
-    boolean visit(OracleSelectPivot x);
+    }
 
-    boolean visit(OracleSelectPivot.Item x);
+    default boolean visit(OracleWithSubqueryEntry x) {
+        return true;
+    }
 
-    boolean visit(OracleSelectRestriction.CheckOption x);
+    default void endVisit(OracleWithSubqueryEntry x) {
 
-    boolean visit(OracleSelectRestriction.ReadOnly x);
+    }
 
-    boolean visit(OracleSelectSubqueryTableSource x);
+    default boolean visit(SearchClause x) {
+        return true;
+    }
 
-    boolean visit(OracleSelectUnPivot x);
+    default void endVisit(SearchClause x) {
 
-    boolean visit(OracleTableExpr x);
+    }
 
-    boolean visit(OracleTimestampExpr x);
+    default boolean visit(CycleClause x) {
+        return true;
+    }
 
-    boolean visit(OracleUpdateSetListClause x);
+    default void endVisit(CycleClause x) {
 
-    boolean visit(OracleUpdateSetListMultiColumnItem x);
+    }
 
-    boolean visit(OracleUpdateSetListSingleColumnItem x);
+    default boolean visit(OracleBinaryFloatExpr x) {
+        return true;
+    }
 
-    boolean visit(OracleUpdateSetValueClause x);
+    default void endVisit(OracleBinaryFloatExpr x) {
 
-    boolean visit(OracleUpdateStatement x);
+    }
 
-    boolean visit(SampleClause x);
+    default boolean visit(OracleBinaryDoubleExpr x) {
+        return true;
+    }
 
-    void endVisit(SampleClause x);
+    default void endVisit(OracleBinaryDoubleExpr x) {
 
-    boolean visit(OracleSelectTableReference x);
+    }
 
-    void endVisit(OracleSelectTableReference x);
+    default boolean visit(OracleCursorExpr x) {
+        return true;
+    }
 
-    boolean visit(PartitionExtensionClause x);
+    default void endVisit(OracleCursorExpr x) {
 
-    void endVisit(PartitionExtensionClause x);
+    }
 
-    boolean visit(VersionsFlashbackQueryClause x);
+    default boolean visit(OracleIsSetExpr x) {
+        return true;
+    }
 
-    void endVisit(VersionsFlashbackQueryClause x);
+    default void endVisit(OracleIsSetExpr x) {
 
-    boolean visit(AsOfFlashbackQueryClause x);
+    }
 
-    void endVisit(AsOfFlashbackQueryClause x);
+    default boolean visit(ModelClause.ReturnRowsClause x) {
+        return true;
+    }
 
-    boolean visit(GroupingSetExpr x);
+    default void endVisit(ModelClause.ReturnRowsClause x) {
 
-    void endVisit(GroupingSetExpr x);
+    }
 
-    boolean visit(OracleWithSubqueryEntry x);
+    default boolean visit(ModelClause.MainModelClause x) {
+        return true;
+    }
 
-    void endVisit(OracleWithSubqueryEntry x);
+    default void endVisit(ModelClause.MainModelClause x) {
 
-    boolean visit(SearchClause x);
+    }
 
-    void endVisit(SearchClause x);
+    default boolean visit(ModelClause.ModelColumnClause x) {
+        return true;
+    }
 
-    boolean visit(CycleClause x);
+    default void endVisit(ModelClause.ModelColumnClause x) {
 
-    void endVisit(CycleClause x);
+    }
 
-    boolean visit(OracleBinaryFloatExpr x);
+    default boolean visit(ModelClause.QueryPartitionClause x) {
+        return true;
+    }
 
-    void endVisit(OracleBinaryFloatExpr x);
+    default void endVisit(ModelClause.QueryPartitionClause x) {
 
-    boolean visit(OracleBinaryDoubleExpr x);
+    }
 
-    void endVisit(OracleBinaryDoubleExpr x);
+    default boolean visit(ModelClause.ModelColumn x) {
+        return true;
+    }
 
-    boolean visit(OracleSelect x);
+    default void endVisit(ModelClause.ModelColumn x) {
 
-    void endVisit(OracleSelect x);
+    }
 
-    boolean visit(OracleCursorExpr x);
+    default boolean visit(ModelClause.ModelRulesClause x) {
+        return true;
+    }
 
-    void endVisit(OracleCursorExpr x);
+    default void endVisit(ModelClause.ModelRulesClause x) {
 
-    boolean visit(OracleIsSetExpr x);
+    }
 
-    void endVisit(OracleIsSetExpr x);
+    default boolean visit(ModelClause.CellAssignmentItem x) {
+        return true;
+    }
 
-    boolean visit(ModelClause.ReturnRowsClause x);
+    default void endVisit(ModelClause.CellAssignmentItem x) {
 
-    void endVisit(ModelClause.ReturnRowsClause x);
+    }
 
-    boolean visit(ModelClause.MainModelClause x);
+    default boolean visit(ModelClause.CellAssignment x) {
+        return true;
+    }
 
-    void endVisit(ModelClause.MainModelClause x);
+    default void endVisit(ModelClause.CellAssignment x) {
 
-    boolean visit(ModelClause.ModelColumnClause x);
+    }
 
-    void endVisit(ModelClause.ModelColumnClause x);
+    default boolean visit(ModelClause x) {
+        return true;
+    }
 
-    boolean visit(ModelClause.QueryPartitionClause x);
+    default void endVisit(ModelClause x) {
 
-    void endVisit(ModelClause.QueryPartitionClause x);
+    }
 
-    boolean visit(ModelClause.ModelColumn x);
+    default boolean visit(OracleReturningClause x) {
+        return true;
+    }
 
-    void endVisit(ModelClause.ModelColumn x);
+    default void endVisit(OracleReturningClause x) {
 
-    boolean visit(ModelClause.ModelRulesClause x);
+    }
 
-    void endVisit(ModelClause.ModelRulesClause x);
+    default boolean visit(OracleInsertStatement x) {
+        return visit((SQLInsertStatement) x);
+    }
 
-    boolean visit(ModelClause.CellAssignmentItem x);
+    default void endVisit(OracleInsertStatement x) {
+        endVisit((SQLInsertStatement) x);
+    }
 
-    void endVisit(ModelClause.CellAssignmentItem x);
+    default boolean visit(InsertIntoClause x) {
+        return true;
+    }
 
-    boolean visit(ModelClause.CellAssignment x);
+    default void endVisit(InsertIntoClause x) {
 
-    void endVisit(ModelClause.CellAssignment x);
+    }
 
-    boolean visit(ModelClause x);
+    default boolean visit(OracleMultiInsertStatement x) {
+        return true;
+    }
 
-    void endVisit(ModelClause x);
+    default void endVisit(OracleMultiInsertStatement x) {
 
-    boolean visit(OracleMergeStatement x);
+    }
 
-    void endVisit(OracleMergeStatement x);
+    default boolean visit(ConditionalInsertClause x) {
+        return true;
+    }
 
-    boolean visit(OracleMergeStatement.MergeUpdateClause x);
+    default void endVisit(ConditionalInsertClause x) {
 
-    void endVisit(OracleMergeStatement.MergeUpdateClause x);
+    }
 
-    boolean visit(OracleMergeStatement.MergeInsertClause x);
+    default boolean visit(ConditionalInsertClauseItem x) {
+        return true;
+    }
 
-    void endVisit(OracleMergeStatement.MergeInsertClause x);
+    default void endVisit(ConditionalInsertClauseItem x) {
 
-    boolean visit(OracleErrorLoggingClause x);
+    }
 
-    void endVisit(OracleErrorLoggingClause x);
+    default boolean visit(OracleSelectQueryBlock x) {
+        return visit((SQLSelectQueryBlock) x);
+    }
 
-    boolean visit(OracleReturningClause x);
+    default void endVisit(OracleSelectQueryBlock x) {
+        endVisit((SQLSelectQueryBlock) x);
+    }
 
-    void endVisit(OracleReturningClause x);
+    default boolean visit(OracleLockTableStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleInsertStatement x);
+    default void endVisit(OracleLockTableStatement x) {
 
-    void endVisit(OracleInsertStatement x);
+    }
 
-    boolean visit(InsertIntoClause x);
+    default boolean visit(OracleAlterSessionStatement x) {
+        return true;
+    }
 
-    void endVisit(InsertIntoClause x);
+    default void endVisit(OracleAlterSessionStatement x) {
 
-    boolean visit(OracleMultiInsertStatement x);
+    }
 
-    void endVisit(OracleMultiInsertStatement x);
+    default boolean visit(OracleDatetimeExpr x) {
+        return true;
+    }
 
-    boolean visit(ConditionalInsertClause x);
+    default void endVisit(OracleDatetimeExpr x) {
 
-    void endVisit(ConditionalInsertClause x);
+    }
 
-    boolean visit(ConditionalInsertClauseItem x);
+    default boolean visit(OracleSysdateExpr x) {
+        return true;
+    }
 
-    void endVisit(ConditionalInsertClauseItem x);
+    default void endVisit(OracleSysdateExpr x) {
 
-    boolean visit(OracleSelectQueryBlock x);
+    }
 
-    void endVisit(OracleSelectQueryBlock x);
+    default boolean visit(OracleExceptionStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleBlockStatement x);
+    default void endVisit(OracleExceptionStatement x) {
 
-    void endVisit(OracleBlockStatement x);
+    }
 
-    boolean visit(OracleLockTableStatement x);
+    default boolean visit(OracleExceptionStatement.Item x) {
+        return true;
+    }
 
-    void endVisit(OracleLockTableStatement x);
+    default void endVisit(OracleExceptionStatement.Item x) {
 
-    boolean visit(OracleAlterSessionStatement x);
+    }
 
-    void endVisit(OracleAlterSessionStatement x);
+    default boolean visit(OracleArgumentExpr x) {
+        return true;
+    }
 
-    boolean visit(OracleExprStatement x);
+    default void endVisit(OracleArgumentExpr x) {
 
-    void endVisit(OracleExprStatement x);
+    }
 
-    boolean visit(OracleDatetimeExpr x);
+    default boolean visit(OracleSetTransactionStatement x) {
+        return true;
+    }
 
-    void endVisit(OracleDatetimeExpr x);
+    default void endVisit(OracleSetTransactionStatement x) {
 
-    boolean visit(OracleSysdateExpr x);
+    }
 
-    void endVisit(OracleSysdateExpr x);
+    default boolean visit(OracleExplainStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleExceptionStatement x);
+    default void endVisit(OracleExplainStatement x) {
 
-    void endVisit(OracleExceptionStatement x);
+    }
 
-    boolean visit(OracleExceptionStatement.Item x);
+    default boolean visit(OracleAlterTableDropPartition x) {
+        return true;
+    }
 
-    void endVisit(OracleExceptionStatement.Item x);
+    default void endVisit(OracleAlterTableDropPartition x) {
 
-    boolean visit(OracleArgumentExpr x);
+    }
 
-    void endVisit(OracleArgumentExpr x);
+    default boolean visit(OracleAlterTableTruncatePartition x) {
+        return true;
+    }
 
-    boolean visit(OracleSetTransactionStatement x);
+    default void endVisit(OracleAlterTableTruncatePartition x) {
 
-    void endVisit(OracleSetTransactionStatement x);
+    }
 
-    boolean visit(OracleGrantStatement x);
+    default boolean visit(OracleAlterTableSplitPartition.TableSpaceItem x) {
+        return true;
+    }
 
-    void endVisit(OracleGrantStatement x);
+    default void endVisit(OracleAlterTableSplitPartition.TableSpaceItem x) {
 
-    boolean visit(OracleExplainStatement x);
+    }
 
-    void endVisit(OracleExplainStatement x);
+    default boolean visit(OracleAlterTableSplitPartition.UpdateIndexesClause x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterProcedureStatement x);
+    default void endVisit(OracleAlterTableSplitPartition.UpdateIndexesClause x) {
 
-    void endVisit(OracleAlterProcedureStatement x);
+    }
 
-    boolean visit(OracleAlterTableDropPartition x);
+    default boolean visit(OracleAlterTableSplitPartition.NestedTablePartitionSpec x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterTableDropPartition x);
+    default void endVisit(OracleAlterTableSplitPartition.NestedTablePartitionSpec x) {
 
-    boolean visit(OracleAlterTableTruncatePartition x);
+    }
 
-    void endVisit(OracleAlterTableTruncatePartition x);
+    default boolean visit(OracleAlterTableSplitPartition x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterTableStatement x);
+    default void endVisit(OracleAlterTableSplitPartition x) {
 
-    void endVisit(OracleAlterTableStatement x);
+    }
 
-    boolean visit(OracleAlterTableSplitPartition.TableSpaceItem x);
+    default boolean visit(OracleAlterTableModify x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterTableSplitPartition.TableSpaceItem x);
+    default void endVisit(OracleAlterTableModify x) {
 
-    boolean visit(OracleAlterTableSplitPartition.UpdateIndexesClause x);
+    }
 
-    void endVisit(OracleAlterTableSplitPartition.UpdateIndexesClause x);
+    default boolean visit(OracleCreateIndexStatement x) {
+        return visit((SQLCreateIndexStatement) x);
+    }
 
-    boolean visit(OracleAlterTableSplitPartition.NestedTablePartitionSpec x);
+    default void endVisit(OracleCreateIndexStatement x) {
+        endVisit((SQLCreateIndexStatement) x);
+    }
 
-    void endVisit(OracleAlterTableSplitPartition.NestedTablePartitionSpec x);
+    default boolean visit(OracleForStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterTableSplitPartition x);
+    default void endVisit(OracleForStatement x) {
 
-    void endVisit(OracleAlterTableSplitPartition x);
+    }
 
-    boolean visit(OracleAlterTableModify x);
+    default boolean visit(OracleRangeExpr x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterTableModify x);
+    default void endVisit(OracleRangeExpr x) {
 
-    boolean visit(OracleCreateIndexStatement x);
+    }
 
-    void endVisit(OracleCreateIndexStatement x);
+    default boolean visit(OraclePrimaryKey x) {
+        return true;
+    }
 
-    boolean visit(OracleForStatement x);
+    default void endVisit(OraclePrimaryKey x) {
 
-    void endVisit(OracleForStatement x);
+    }
 
-    boolean visit(Else x);
+    default boolean visit(OracleCreateTableStatement x) {
+        return visit((SQLCreateTableStatement) x);
+    }
 
-    void endVisit(Else x);
+    default void endVisit(OracleCreateTableStatement x) {
+        endVisit((SQLCreateTableStatement) x);
+    }
 
-    boolean visit(ElseIf x);
+    default boolean visit(OracleStorageClause x) {
+        return true;
+    }
 
-    void endVisit(ElseIf x);
+    default void endVisit(OracleStorageClause x) {
 
-    boolean visit(OracleIfStatement x);
+    }
 
-    void endVisit(OracleIfStatement x);
+    default boolean visit(OracleGotoStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleRangeExpr x);
+    default void endVisit(OracleGotoStatement x) {
 
-    void endVisit(OracleRangeExpr x);
+    }
 
-    boolean visit(OracleAlterIndexStatement x);
+    default boolean visit(OracleLabelStatement x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterIndexStatement x);
+    default void endVisit(OracleLabelStatement x) {
 
-    boolean visit(OracleAlterTableAddConstaint x);
+    }
 
-    void endVisit(OracleAlterTableAddConstaint x);
+    default boolean visit(OracleAlterTriggerStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterTableRenameTo x);
+    default void endVisit(OracleAlterTriggerStatement x) {
 
-    void endVisit(OracleAlterTableRenameTo x);
+    }
 
-    boolean visit(OraclePrimaryKey x);
+    default boolean visit(OracleAlterSynonymStatement x) {
+        return true;
+    }
 
-    void endVisit(OraclePrimaryKey x);
+    default void endVisit(OracleAlterSynonymStatement x) {
 
-    boolean visit(OracleCreateTableStatement x);
+    }
 
-    void endVisit(OracleCreateTableStatement x);
+    default boolean visit(OracleAlterViewStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterIndexStatement.Rebuild x);
+    default void endVisit(OracleAlterViewStatement x) {
 
-    void endVisit(OracleAlterIndexStatement.Rebuild x);
+    }
 
-    boolean visit(OracleStorageClause x);
+    default boolean visit(OracleAlterTableMoveTablespace x) {
+        return true;
+    }
 
-    void endVisit(OracleStorageClause x);
+    default void endVisit(OracleAlterTableMoveTablespace x) {
 
-    boolean visit(OracleGotoStatement x);
+    }
 
-    void endVisit(OracleGotoStatement x);
+    default boolean visit(OracleFileSpecification x) {
+        return true;
+    }
 
-    boolean visit(OracleLabelStatement x);
+    default void endVisit(OracleFileSpecification x) {
 
-    void endVisit(OracleLabelStatement x);
+    }
 
-    boolean visit(OracleParameter x);
+    default boolean visit(OracleAlterTablespaceAddDataFile x) {
+        return true;
+    }
 
-    void endVisit(OracleParameter x);
+    default void endVisit(OracleAlterTablespaceAddDataFile x) {
 
-    boolean visit(OracleCommitStatement x);
+    }
 
-    void endVisit(OracleCommitStatement x);
+    default boolean visit(OracleAlterTablespaceStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleAlterTriggerStatement x);
+    default void endVisit(OracleAlterTablespaceStatement x) {
 
-    void endVisit(OracleAlterTriggerStatement x);
+    }
 
-    boolean visit(OracleAlterSynonymStatement x);
+    default boolean visit(OracleExitStatement x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterSynonymStatement x);
+    default void endVisit(OracleExitStatement x) {
 
-    boolean visit(OracleAlterViewStatement x);
+    }
 
-    void endVisit(OracleAlterViewStatement x);
+    default boolean visit(OracleContinueStatement x) {
+        return true;
+    }
 
-    boolean visit(AsOfSnapshotClause x);
+    default void endVisit(OracleContinueStatement x) {
 
-    void endVisit(AsOfSnapshotClause x);
+    }
 
-    boolean visit(OracleAlterTableMoveTablespace x);
+    default boolean visit(OracleRaiseStatement x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterTableMoveTablespace x);
+    default void endVisit(OracleRaiseStatement x) {
 
-    boolean visit(OracleSizeExpr x);
+    }
 
-    void endVisit(OracleSizeExpr x);
+    default boolean visit(OracleCreateDatabaseDbLinkStatement x) {
+        return true;
+    }
 
-    boolean visit(OracleFileSpecification x);
+    default void endVisit(OracleCreateDatabaseDbLinkStatement x) {
 
-    void endVisit(OracleFileSpecification x);
+    }
 
-    boolean visit(OracleAlterTablespaceAddDataFile x);
+    default boolean visit(OracleDropDbLinkStatement x) {
+        return true;
+    }
 
-    void endVisit(OracleAlterTablespaceAddDataFile x);
+    default void endVisit(OracleDropDbLinkStatement x) {
 
-    boolean visit(OracleAlterTablespaceStatement x);
+    }
 
-    void endVisit(OracleAlterTablespaceStatement x);
+    default boolean visit(OracleDataTypeIntervalYear x) {
+        return true;
+    }
 
-    boolean visit(OracleTruncateStatement x);
+    default void endVisit(OracleDataTypeIntervalYear x) {
 
-    void endVisit(OracleTruncateStatement x);
+    }
 
-    boolean visit(OracleCreateSequenceStatement x);
+    default boolean visit(OracleDataTypeIntervalDay x) {
+        return true;
+    }
 
-    void endVisit(OracleCreateSequenceStatement x);
+    default void endVisit(OracleDataTypeIntervalDay x) {
 
-    boolean visit(OracleRangeValuesClause x);
+    }
 
-    void endVisit(OracleRangeValuesClause x);
+    default boolean visit(OracleUsingIndexClause x) {
+        return true;
+    }
 
-    boolean visit(OraclePartitionByRangeClause x);
+    default void endVisit(OracleUsingIndexClause x) {
 
-    void endVisit(OraclePartitionByRangeClause x);
+    }
 
-    boolean visit(OracleLoopStatement x);
+    default boolean visit(OracleLobStorageClause x) {
+        return true;
+    }
 
-    void endVisit(OracleLoopStatement x);
+    default void endVisit(OracleLobStorageClause x) {
 
-    boolean visit(OracleExitStatement x);
+    }
 
-    void endVisit(OracleExitStatement x);
+    default boolean visit(OracleUnique x) {
+        return visit((SQLUnique) x);
+    }
 
-    boolean visit(OracleFetchStatement x);
+    default void endVisit(OracleUnique x) {
+        endVisit((SQLUnique) x);
+    }
 
-    void endVisit(OracleFetchStatement x);
+    default boolean visit(OracleForeignKey x) {
+        return visit((SQLForeignKeyImpl) x);
+    }
 
-    boolean visit(OracleSavePointStatement x);
+    default void endVisit(OracleForeignKey x) {
+        endVisit((SQLForeignKeyImpl) x);
+    }
 
-    void endVisit(OracleSavePointStatement x);
+    default boolean visit(OracleCheck x) {
+        return visit((SQLCheck) x);
+    }
 
-    boolean visit(OracleCreateProcedureStatement x);
+    default void endVisit(OracleCheck x) {
+        endVisit((SQLCheck) x);
+    }
 
-    void endVisit(OracleCreateProcedureStatement x);
+    default boolean visit(OracleSupplementalIdKey x) {
+        return true;
+    }
 
-    boolean visit(OracleCreateDatabaseDbLinkStatement x);
+    default void endVisit(OracleSupplementalIdKey x) {
 
-    void endVisit(OracleCreateDatabaseDbLinkStatement x);
+    }
 
-    boolean visit(OracleDropDatabaseLinkStatement x);
+    default boolean visit(OracleSupplementalLogGrp x) {
+        return true;
+    }
 
-    void endVisit(OracleDropDatabaseLinkStatement x);
-    
-    boolean visit(OracleDataTypeTimestamp x);
+    default void endVisit(OracleSupplementalLogGrp x) {
 
-    void endVisit(OracleDataTypeTimestamp x);
-    
-    boolean visit(OracleDataTypeIntervalYear x);
+    }
 
-    void endVisit(OracleDataTypeIntervalYear x);
-    
-    boolean visit(OracleDataTypeIntervalDay x);
+    default boolean visit(OracleCreateTableStatement.Organization x) {
+        return true;
+    }
 
-    void endVisit(OracleDataTypeIntervalDay x);
+    default void endVisit(OracleCreateTableStatement.Organization x) {
 
-    boolean visit(OracleDropSequenceStatement x);
+    }
 
-    void endVisit(OracleDropSequenceStatement x);
+    default boolean visit(OracleCreateTableStatement.OIDIndex x) {
+        return true;
+    }
+
+    default void endVisit(OracleCreateTableStatement.OIDIndex x) {
+
+    }
+
+    default boolean visit(OracleCreatePackageStatement x) {
+        return true;
+    }
+
+    default void endVisit(OracleCreatePackageStatement x) {
+
+    }
+
+    default boolean visit(OracleExecuteImmediateStatement x) {
+        return true;
+    }
+
+    default void endVisit(OracleExecuteImmediateStatement x) {
+
+    }
+
+    default boolean visit(OracleTreatExpr x) {
+        return true;
+    }
+
+    default void endVisit(OracleTreatExpr x) {
+
+    }
+
+    default boolean visit(OracleCreateSynonymStatement x) {
+        return true;
+    }
+
+    default void endVisit(OracleCreateSynonymStatement x) {
+
+    }
+
+    default boolean visit(OracleCreateTypeStatement x) {
+        return true;
+    }
+
+    default void endVisit(OracleCreateTypeStatement x) {
+
+    }
+
+    default boolean visit(OraclePipeRowStatement x) {
+        return true;
+    }
+
+    default void endVisit(OraclePipeRowStatement x) {
+
+    }
+
+    default boolean visit(OracleIsOfTypeExpr x) {
+        return true;
+    }
+
+    default void endVisit(OracleIsOfTypeExpr x) {
+
+    }
+
+    default boolean visit(OracleRunStatement x) {
+        return true;
+    }
+
+    default void endVisit(OracleRunStatement x) {
+
+    }
+
+    default boolean visit(OracleXmlColumnProperties x) {
+        return true;
+    }
+
+    default void endVisit(OracleXmlColumnProperties x) {
+
+    }
+
+    default boolean visit(OracleXmlColumnProperties.OracleXMLTypeStorage x) {
+        return true;
+    }
+
+    default void endVisit(OracleXmlColumnProperties.OracleXMLTypeStorage x) {
+
+    }
 }

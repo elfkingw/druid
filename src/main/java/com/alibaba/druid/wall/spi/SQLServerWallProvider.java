@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package com.alibaba.druid.wall.spi;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.MSSQLServerExportParameterVisitor;
+import com.alibaba.druid.sql.parser.SQLParserFeature;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.alibaba.druid.sql.visitor.ExportParameterVisitor;
-import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.druid.wall.WallConfig;
 import com.alibaba.druid.wall.WallProvider;
 import com.alibaba.druid.wall.WallVisitor;
@@ -29,31 +30,27 @@ import com.alibaba.druid.wall.WallVisitor;
  * 
  * @author RaymondXiu
  * @version 1.0, 2012-3-17
- * @see
  */
 public class SQLServerWallProvider extends WallProvider {
 
     public final static String DEFAULT_CONFIG_DIR = "META-INF/druid/wall/sqlserver";
 
-    /**
-     * @param config
-     */
     public SQLServerWallProvider(){
         this(new WallConfig(DEFAULT_CONFIG_DIR));
     }
 
     public SQLServerWallProvider(WallConfig config){
-        super(config, JdbcConstants.SQL_SERVER);
+        super(config, DbType.sqlserver);
     }
 
     @Override
     public SQLStatementParser createParser(String sql) {
-        return new SQLServerStatementParser(sql);
+        return new SQLServerStatementParser(sql, SQLParserFeature.EnableSQLBinaryOpExprGroup);
     }
 
     @Override
     public WallVisitor createWallVisitor() {
-        return new SQLServerWallVisitor(this);
+        return new com.alibaba.druid.wall.spi.SQLServerWallVisitor(this);
     }
 
     @Override

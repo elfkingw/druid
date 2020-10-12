@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -40,7 +39,7 @@ import com.alibaba.druid.filter.FilterChainImpl;
 import com.alibaba.druid.filter.stat.StatFilter;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao [szujobs@hotmail.com]
  */
 public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionProxy {
 
@@ -52,7 +51,7 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
 
     private final long            connectedTime;
 
-    private TransactionInfo       transcationInfo;
+    private TransactionInfo       transactionInfo;
 
     private int                   closeCount;
 
@@ -122,8 +121,8 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
         FilterChainImpl chain = createChain();
         chain.connection_commit(this);
 
-        if (transcationInfo != null) {
-            transcationInfo.setEndTimeMillis();
+        if (transactionInfo != null) {
+            transactionInfo.setEndTimeMillis();
         }
         recycleFilterChain(chain);
     }
@@ -399,8 +398,8 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
         FilterChainImpl chain = createChain();
         chain.connection_rollback(this);
         recycleFilterChain(chain);
-        if (transcationInfo != null) {
-            transcationInfo.setEndTimeMillis();
+        if (transactionInfo != null) {
+            transactionInfo.setEndTimeMillis();
         }
     }
 
@@ -409,21 +408,21 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
         FilterChainImpl chain = createChain();
         chain.connection_rollback(this, savepoint);
         recycleFilterChain(chain);
-        if (transcationInfo != null) {
-            transcationInfo.setEndTimeMillis();
+        if (transactionInfo != null) {
+            transactionInfo.setEndTimeMillis();
         }
     }
 
     @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
         if (!autoCommit) {
-            if (transcationInfo == null) {
+            if (transactionInfo == null) {
                 long transactionId = this.dataSource.createTransactionId();
-                transcationInfo = new TransactionInfo(transactionId);
-                this.getAttributes().put(StatFilter.ATTR_TRANSACTION, transcationInfo); // compatible for druid 0.1.18
+                transactionInfo = new TransactionInfo(transactionId);
+                this.putAttribute(StatFilter.ATTR_TRANSACTION, transactionInfo); // compatible for druid 0.1.18
             }
         } else {
-            transcationInfo = null;
+            transactionInfo = null;
         }
 
         FilterChainImpl chain = createChain();
@@ -497,23 +496,35 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
     }
 
     public void setSchema(String schema) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        chain.connection_setSchema(this, schema);
+        recycleFilterChain(chain);
     }
 
     public String getSchema() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        String schema = chain.connection_getSchema(this);
+        recycleFilterChain(chain);
+        return schema;
     }
 
     public void abort(Executor executor) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        chain.connection_abort(this, executor);
+        recycleFilterChain(chain);
     }
 
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        chain.connection_setNetworkTimeout(this, executor, milliseconds);
+        recycleFilterChain(chain);
     }
 
     public int getNetworkTimeout() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        FilterChainImpl chain = createChain();
+        int networkTimeout = chain.connection_getNetworkTimeout(this);
+        recycleFilterChain(chain);
+        return networkTimeout;
     }
 
     @SuppressWarnings("unchecked")
@@ -527,7 +538,7 @@ public class ConnectionProxyImpl extends WrapperProxyImpl implements ConnectionP
 
     @Override
     public TransactionInfo getTransactionInfo() {
-        return transcationInfo;
+        return transactionInfo;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,52 +15,80 @@
  */
 package com.alibaba.druid.sql.dialect.mysql.ast;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.ast.SQLIndex;
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.statement.SQLConstaintImpl;
-import com.alibaba.druid.sql.ast.statement.SQLTableConstaint;
+import com.alibaba.druid.sql.ast.statement.SQLTableConstraint;
+import com.alibaba.druid.sql.ast.statement.SQLUnique;
 import com.alibaba.druid.sql.ast.statement.SQLUniqueConstraint;
+import com.alibaba.druid.sql.dialect.ads.visitor.AdsVisitor;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-@SuppressWarnings("serial")
-public class MySqlKey extends SQLConstaintImpl implements SQLUniqueConstraint, SQLTableConstaint {
-
-    private List<SQLExpr> columns = new ArrayList<SQLExpr>();
-    private String        indexType;
+public class MySqlKey extends SQLUnique implements SQLUniqueConstraint, SQLTableConstraint, SQLIndex {
 
     public MySqlKey(){
-
+        dbType = DbType.mysql;
     }
 
     @Override
     protected void accept0(SQLASTVisitor visitor) {
         if (visitor instanceof MySqlASTVisitor) {
             accept0((MySqlASTVisitor) visitor);
+        } else  if (visitor instanceof AdsVisitor) {
+            accept0((AdsVisitor) visitor);
         }
+    }
+
+    protected void accept0(AdsVisitor visitor) {
+        if (visitor.visit(this)) {
+            acceptChild(visitor, this.getName());
+            acceptChild(visitor, this.getColumns());
+            acceptChild(visitor, this.getName());
+        }
+        visitor.endVisit(this);
     }
 
     protected void accept0(MySqlASTVisitor visitor) {
         if (visitor.visit(this)) {
             acceptChild(visitor, this.getName());
             acceptChild(visitor, this.getColumns());
+            acceptChild(visitor, this.getName());
         }
         visitor.endVisit(this);
     }
 
-    @Override
-    public List<SQLExpr> getColumns() {
-        return columns;
-    }
-
     public String getIndexType() {
-        return indexType;
+        return indexDefinition.getOptions().getIndexType();
     }
 
     public void setIndexType(String indexType) {
-        this.indexType = indexType;
+        indexDefinition.getOptions().setIndexType(indexType);
     }
 
+    public boolean isHasConstraint() {
+        return indexDefinition.hasConstraint();
+    }
+
+    public void setHasConstraint(boolean hasConstraint) {
+        indexDefinition.setHasConstraint(hasConstraint);
+    }
+
+    public void cloneTo(MySqlKey x) {
+        super.cloneTo(x);
+    }
+
+    public MySqlKey clone() {
+        MySqlKey x = new MySqlKey();
+        cloneTo(x);
+        return x;
+    }
+
+    public SQLExpr getKeyBlockSize() {
+        return indexDefinition.getOptions().getKeyBlockSize();
+    }
+
+    public void setKeyBlockSize(SQLExpr x) {
+        indexDefinition.getOptions().setKeyBlockSize(x);
+    }
 }

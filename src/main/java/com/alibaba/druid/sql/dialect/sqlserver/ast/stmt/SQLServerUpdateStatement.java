@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
  */
 package com.alibaba.druid.sql.dialect.sqlserver.ast.stmt;
 
-import com.alibaba.druid.sql.ast.statement.SQLTableSource;
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
+import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerOutput;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerStatement;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerASTVisitor;
@@ -24,25 +25,33 @@ import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
 public class SQLServerUpdateStatement extends SQLUpdateStatement implements SQLServerStatement {
 
-    private static final long serialVersionUID = 1L;
-
-    private SQLServerTop      top;
-    private SQLTableSource    from;
+    private SQLServerTop    top;
+    private SQLServerOutput output;
     
+    public SQLServerUpdateStatement(){
+        super (DbType.sqlserver);
+    }
+
     public SQLServerTop getTop() {
         return top;
     }
-    
+
     public void setTop(SQLServerTop top) {
+        if (top != null) {
+            top.setParent(this);
+        }
         this.top = top;
     }
 
-    public SQLTableSource getFrom() {
-        return from;
+    public SQLServerOutput getOutput() {
+        return output;
     }
 
-    public void setFrom(SQLTableSource from) {
-        this.from = from;
+    public void setOutput(SQLServerOutput output) {
+        if (output != null) {
+            output.setParent(this);
+        }
+        this.output = output;
     }
 
     @Override
@@ -56,6 +65,7 @@ public class SQLServerUpdateStatement extends SQLUpdateStatement implements SQLS
             acceptChild(visitor, top);
             acceptChild(visitor, tableSource);
             acceptChild(visitor, items);
+            acceptChild(visitor, output);
             acceptChild(visitor, from);
             acceptChild(visitor, where);
         }

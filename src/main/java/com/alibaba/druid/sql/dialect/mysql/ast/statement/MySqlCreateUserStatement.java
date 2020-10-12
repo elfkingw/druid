@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,48 +15,70 @@
  */
 package com.alibaba.druid.sql.dialect.mysql.ast.statement;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLName;
+import com.alibaba.druid.sql.ast.statement.SQLCreateStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlObjectImpl;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 
-public class MySqlCreateUserStatement extends MySqlStatementImpl {
+import java.util.ArrayList;
+import java.util.List;
 
-    private static final long       serialVersionUID = 1L;
+public class MySqlCreateUserStatement extends MySqlStatementImpl implements SQLCreateStatement {
 
-    private List<UserSpecification> users            = new ArrayList<UserSpecification>(2);
+    private List<UserSpecification> users = new ArrayList<UserSpecification>(2);
+
+    private boolean ifNotExists = false;
 
     public List<UserSpecification> getUsers() {
         return users;
     }
 
-    public void setUsers(List<UserSpecification> users) {
-        this.users = users;
+    public boolean isIfNotExists() {
+        return ifNotExists;
     }
-    
+
+    public void setIfNotExists(boolean ifNotExists) {
+        this.ifNotExists = ifNotExists;
+    }
+
+    public void addUser(UserSpecification user) {
+        if (user != null) {
+            user.setParent(this);
+        }
+        this.users.add(user);
+    }
+
     @Override
     public void accept0(MySqlASTVisitor visitor) {
         if (visitor.visit(this)) {
             acceptChild(visitor, users);
         }
+        visitor.endVisit(this);
     }
 
     public static class UserSpecification extends MySqlObjectImpl {
 
-        private static final long serialVersionUID = 1L;
-
-        private SQLExpr           user;
-        private SQLExpr           password;
-        private SQLExpr           authPlugin;
+        private SQLExpr user;
+        private boolean passwordHash = false;
+        private SQLExpr password;
+        private SQLExpr authPlugin;
+        private boolean pluginAs;
 
         public SQLExpr getUser() {
             return user;
         }
 
         public void setUser(SQLExpr user) {
-            this.user = user;
+            this.user = (SQLName) user;
+        }
+
+        public boolean isPasswordHash() {
+            return passwordHash;
+        }
+
+        public void setPasswordHash(boolean passwordHash) {
+            this.passwordHash = passwordHash;
         }
 
         public SQLExpr getPassword() {
@@ -75,6 +97,14 @@ public class MySqlCreateUserStatement extends MySqlStatementImpl {
             this.authPlugin = authPlugin;
         }
 
+        public boolean isPluginAs() {
+            return pluginAs;
+        }
+
+        public void setPluginAs(boolean pluginAs) {
+            this.pluginAs = pluginAs;
+        }
+
         @Override
         public void accept0(MySqlASTVisitor visitor) {
             if (visitor.visit(this)) {
@@ -82,7 +112,9 @@ public class MySqlCreateUserStatement extends MySqlStatementImpl {
                 acceptChild(visitor, password);
                 acceptChild(visitor, authPlugin);
             }
+            visitor.endVisit(this);
         }
+
 
     }
 }

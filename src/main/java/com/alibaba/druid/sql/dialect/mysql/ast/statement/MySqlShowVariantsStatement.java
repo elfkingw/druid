@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,11 @@ import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 
 public class MySqlShowVariantsStatement extends MySqlStatementImpl implements MySqlShowStatement {
 
-    private static final long serialVersionUID = 1L;
+    private boolean global  = false;
+    private boolean session = false;
 
-    private boolean           global           = false;
-    private boolean           session          = false;
-
-    private SQLExpr           like;
-    private SQLExpr           where;
+    private SQLExpr like;
+    private SQLExpr where;
 
     public boolean isGlobal() {
         return global;

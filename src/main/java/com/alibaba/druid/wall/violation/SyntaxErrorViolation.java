@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ public class SyntaxErrorViolation implements Violation {
 
     public String getMessage() {
         if (exception == null) {
-            return null;
+            return "syntax error";
         }
 
-        return exception.getMessage();
+        return "syntax error: " + exception.getMessage();
     }
 
     @Override

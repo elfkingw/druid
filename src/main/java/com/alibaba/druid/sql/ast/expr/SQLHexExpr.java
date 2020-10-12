@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,17 @@
  */
 package com.alibaba.druid.sql.ast.expr;
 
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.FastsqlException;
 import com.alibaba.druid.sql.ast.SQLExprImpl;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 import com.alibaba.druid.util.HexBin;
 
-public class SQLHexExpr extends SQLExprImpl implements SQLLiteralExpr {
+import java.io.IOException;
 
-    private static final long serialVersionUID = 1L;
+public class SQLHexExpr extends SQLExprImpl implements SQLLiteralExpr, SQLValuableExpr {
 
-    private final String      hex;
+    private final String hex;
 
     public SQLHexExpr(String hex){
         this.hex = hex;
@@ -33,14 +35,18 @@ public class SQLHexExpr extends SQLExprImpl implements SQLLiteralExpr {
         return hex;
     }
 
-    public void output(StringBuffer buf) {
-        buf.append("0x");
-        buf.append(this.hex);
+    public void output(Appendable buf) {
+        try {
+            buf.append("0x");
+            buf.append(this.hex);
 
-        String charset = (String) getAttribute("USING");
-        if (charset != null) {
-            buf.append(" USING ");
-            buf.append(charset);
+            String charset = (String) getAttribute("USING");
+            if (charset != null) {
+                buf.append(" USING ");
+                buf.append(charset);
+            }
+        } catch (IOException ex) {
+            throw new FastsqlException("output error", ex);
         }
     }
 
@@ -78,8 +84,26 @@ public class SQLHexExpr extends SQLExprImpl implements SQLLiteralExpr {
         }
         return true;
     }
-    
+
     public byte[] toBytes() {
         return HexBin.decode(this.hex);
+    }
+
+    public SQLHexExpr clone () {
+        return new SQLHexExpr(hex);
+    }
+
+    public byte[] getValue() {
+        return toBytes();
+    }
+
+
+    public SQLCharExpr toCharExpr() {
+        byte[] bytes = toBytes();
+        if (bytes == null) {
+            return null;
+        }
+        String str = new String(bytes, SQLUtils.UTF8);
+        return new SQLCharExpr(str);
     }
 }

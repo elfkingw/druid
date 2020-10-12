@@ -1,7 +1,7 @@
 package com.alibaba.druid.wall;
 
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,27 @@ package com.alibaba.druid.wall;
  */
 public class WallSqlTableStat {
 
-    private int selectCount;
-    private int selectIntoCount;
-    private int insertCount;
-    private int updateCount;
-    private int deleteCount;
-    private int truncateCount;
-    private int createCount;
-    private int alterCount;
-    private int dropCount;
-    private int replaceCount;
-    private int showCount;
+    private int    selectCount;
+    private int    selectIntoCount;
+    private int    insertCount;
+    private int    updateCount;
+    private int    deleteCount;
+    private int    truncateCount;
+    private int    createCount;
+    private int    alterCount;
+    private int    dropCount;
+    private int    replaceCount;
+    private int    showCount;
+
+    private String sample;
+
+    public String getSample() {
+        return sample;
+    }
+
+    public void setSample(String sample) {
+        this.sample = sample;
+    }
 
     public int getReplaceCount() {
         return replaceCount;
@@ -149,11 +159,10 @@ public class WallSqlTableStat {
         this.dropCount += value;
     }
 
-    
     public int getShowCount() {
         return showCount;
     }
-    
+
     public void incrementShowCount() {
         this.showCount++;
     }
